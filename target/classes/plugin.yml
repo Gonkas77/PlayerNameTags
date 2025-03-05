@@ -1,5 +1,5 @@
 name: PlayerNameTags
-version: '0.0.3-fix'
+version: '0.0.3-fix2'
 main: me.gonkas.playernametags.PlayerNameTags
 api-version: '1.21'
 authors: [Gonkas77]
