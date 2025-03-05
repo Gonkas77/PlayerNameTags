@@ -1,0 +1,12 @@
+name: PlayerNameTags
+version: '${project.version}'
+main: me.gonkas.playernametags.PlayerNameTags
+api-version: '1.21'
+authors: [Gonkas77]
+commands:
+  name:
+    description: "Creates a ghost entity following the player with a custom name to replace the player's name tag."
+    permission: playernametags.change_names
+  removename:
+    description: "Removes any existing custom name tags from a certain player."
+    permission: playernametags.remove_names

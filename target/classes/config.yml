@@ -1,0 +1,5 @@
+# All possible characters to be used in names (including uppercase)
+valid-name-characters: "abcdefghijklmnopqrstuvwxyz1234567890.-_ "
+
+# Maximum length for names
+max-name-length: 24
