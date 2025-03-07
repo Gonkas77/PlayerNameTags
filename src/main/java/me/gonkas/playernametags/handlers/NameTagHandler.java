@@ -3,14 +3,15 @@ package me.gonkas.playernametags.handlers;
 import me.gonkas.playernametags.PlayerNameTags;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,7 +30,10 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerJoin(PlayerJoinEvent event) {
-        loadPlayer(event.getPlayer());
+        Player player = event.getPlayer();
+
+        loadPlayer(player);
+        if (event.joinMessage() != null) {event.joinMessage(Component.text("§e" + PLAYERNAMES.get(player)).append(event.joinMessage()));}
     }
 
     public static void loadPlayer(Player player) {
@@ -85,7 +89,10 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerQuit(PlayerQuitEvent event) {
-        unloadPlayer(event.getPlayer());
+        Player player = event.getPlayer();
+
+        if (event.quitMessage() != null) {event.quitMessage(Component.text("§e" + PLAYERNAMES.get(player)).append(event.quitMessage()));}
+        unloadPlayer(player);
     }
 
     public static void unloadPlayer(Player player) {
@@ -110,8 +117,26 @@ public class NameTagHandler implements Listener {
         PlayerNameTags.consoleInfo("Deleted name tag for player '%s'.", player.getName());
     }
 
-    public static String getPlayerName(Player player) {
-        String name = PLAYERNAMES.get(player);
-        if (name == null) {return player.getName();} else return name;
+    @EventHandler
+    public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
+        if (PLAYERSTANDS.containsKey(event.getPlayer())) PLAYERSTANDS.get(event.getPlayer()).setCustomNameVisible(event.getPlayer().isSneaking() && !event.getPlayer().isFlying());
+    }
+
+    @EventHandler
+    public static void onSpectatorMode(PlayerGameModeChangeEvent event) {
+        if (PLAYERSTANDS.containsKey(event.getPlayer())) PLAYERSTANDS.get(event.getPlayer()).setCustomNameVisible(event.getNewGameMode() != GameMode.SPECTATOR);
+    }
+
+    @EventHandler
+    public static void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getPlayer();
+
+        if (event.deathMessage() != null) {event.deathMessage(Component.text("§e" + PLAYERNAMES.get(player)).append(event.deathMessage()));}
+        player.setGameMode(GameMode.SPECTATOR);
+    }
+
+    @EventHandler
+    public static void onPlayerRespawn(PlayerRespawnEvent event) {
+        event.getPlayer().addPassenger(PLAYERSTANDS.get(event.getPlayer()));
     }
 }

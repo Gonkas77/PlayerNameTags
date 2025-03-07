@@ -26,7 +26,7 @@ public class NameCommand implements CommandExecutor, TabCompleter {
         StringBuilder builder = new StringBuilder(args[1]);
         for (int i=2; i < args.length; i++) {
             builder.append(" ").append(args[i]);
-            if (builder.length() > 24) {commandSender.sendMessage("§cNames can have at most 24 characters!"); return false;}
+            if (builder.length() > ConfigHandler.getMaxNameLength()) {commandSender.sendMessage("§cNames can have at most " + ConfigHandler.getMaxNameLength() + " characters!"); return false;}
         }
 
         String name = builder.toString();

@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="playernametags_0.0.3-fix2">
-    <output-path>$USER_HOME$/Desktop/Private Servers/1.21.4/plugins</output-path>
-    <root id="archive" name="playernametags_0.0.3-fix2.jar">
-      <element id="module-output" name="playernametags" />
-    </root>
-  </artifact>
-</component>

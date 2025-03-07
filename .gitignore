@@ -1,3 +1,10 @@
+.idea
+target
+playernametags.iml
+pom.xml
+.gitattributes
+.gitignore
+
 # Compiled class file
 *.class
 
