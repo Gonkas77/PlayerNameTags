@@ -2,16 +2,20 @@ package me.gonkas.playernametags.handlers;
 
 import me.gonkas.playernametags.PlayerNameTags;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.potion.PotionEffectType;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -33,7 +37,13 @@ public class NameTagHandler implements Listener {
         Player player = event.getPlayer();
 
         loadPlayer(player);
-        if (event.joinMessage() != null) {event.joinMessage(Component.text("§e" + PLAYERNAMES.get(player)).append(event.joinMessage()));}
+        if (event.joinMessage() != null) {
+            event.joinMessage(event.joinMessage().replaceText(
+                    TextReplacementConfig.builder()
+                            .match(player.getName())
+                            .replacement(PLAYERNAMES.get(player))
+                            .build()));
+        }
     }
 
     public static void loadPlayer(Player player) {
@@ -91,7 +101,13 @@ public class NameTagHandler implements Listener {
     public static void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        if (event.quitMessage() != null) {event.quitMessage(Component.text("§e" + PLAYERNAMES.get(player)).append(event.quitMessage()));}
+        if (event.quitMessage() != null) {
+            event.quitMessage(event.quitMessage().replaceText(
+                    TextReplacementConfig.builder()
+                            .match(player.getName())
+                            .replacement(PLAYERNAMES.get(player))
+                            .build()));
+        }
         unloadPlayer(player);
     }
 
@@ -128,11 +144,23 @@ public class NameTagHandler implements Listener {
     }
 
     @EventHandler
-    public static void onPlayerDeath(PlayerDeathEvent event) {
-        Player player = event.getPlayer();
+    public static void onPlayerInvis(EntityPotionEffectEvent event) {
+        if (event.getEntityType() != EntityType.PLAYER) return;
+        if (!PLAYERSTANDS.containsKey((Player) event.getEntity()) || event.getModifiedType() != PotionEffectType.INVISIBILITY) return;
 
-        if (event.deathMessage() != null) {event.deathMessage(Component.text("§e" + PLAYERNAMES.get(player)).append(event.deathMessage()));}
-        player.setGameMode(GameMode.SPECTATOR);
+        if (event.getAction() == EntityPotionEffectEvent.Action.ADDED) PLAYERSTANDS.get((Player) event.getEntity()).setCustomNameVisible(false);
+        else if (event.getAction() != EntityPotionEffectEvent.Action.CHANGED) PLAYERSTANDS.get((Player) event.getEntity()).setCustomNameVisible(true);
+    }
+
+    @EventHandler
+    public static void onPlayerDeath(PlayerDeathEvent event) {
+        if (event.deathMessage() != null) {
+            event.deathMessage(event.deathMessage().replaceText(
+                    TextReplacementConfig.builder()
+                            .match(event.getPlayer().getName())
+                            .replacement(PLAYERNAMES.get(event.getPlayer()))
+                            .build()));
+        }
     }
 
     @EventHandler
