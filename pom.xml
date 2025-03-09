@@ -6,7 +6,7 @@
 
     <groupId>me.gonkas</groupId>
     <artifactId>playernametags</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.5-fix</version>
     <packaging>jar</packaging>
 
     <name>playernametags</name>
