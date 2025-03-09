@@ -138,6 +138,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
+        if (event.isCancelled()) return;
         if (PLAYERSTANDS.containsKey(event.getPlayer())) PLAYERSTANDS.get(event.getPlayer()).setCustomNameVisible(event.getPlayer().isSneaking() && !event.getPlayer().isFlying());
     }
 
@@ -158,10 +159,9 @@ public class NameTagHandler implements Listener {
     @EventHandler
     public static void onPlayerDeath(PlayerDeathEvent event) {
         if (event.deathMessage() != null) {
-            @RegExp String name = PLAYERNAMES.get(event.getPlayer()) == null ? event.getPlayer().getName() : PLAYERNAMES.get(event.getPlayer());
             event.deathMessage(event.deathMessage().replaceText(
                     TextReplacementConfig.builder()
-                            .match(name)
+                            .match(getName(event.getPlayer()))
                             .replacement(PLAYERNAMES.get(event.getPlayer()))
                             .build()));
         }
@@ -170,5 +170,9 @@ public class NameTagHandler implements Listener {
     @EventHandler
     public static void onPlayerRespawn(PlayerRespawnEvent event) {
         event.getPlayer().addPassenger(PLAYERSTANDS.get(event.getPlayer()));
+    }
+
+    public static String getName(Player player) {
+        return PLAYERNAMES.get(player) == null ? player.getName() : PLAYERNAMES.get(player);
     }
 }
