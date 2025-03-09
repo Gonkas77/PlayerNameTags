@@ -16,7 +16,6 @@ import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.potion.PotionEffectType;
-import org.intellij.lang.annotations.RegExp;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -39,10 +38,9 @@ public class NameTagHandler implements Listener {
 
         loadPlayer(player);
         if (event.joinMessage() != null) {
-            @RegExp String name = PLAYERNAMES.get(player) == null ? player.getName() : PLAYERNAMES.get(player);
             event.joinMessage(event.joinMessage().replaceText(
                     TextReplacementConfig.builder()
-                            .match(name)
+                            .match(getName(event.getPlayer()))
                             .replacement(PLAYERNAMES.get(player))
                             .build()));
         }
@@ -104,10 +102,9 @@ public class NameTagHandler implements Listener {
         Player player = event.getPlayer();
 
         if (event.quitMessage() != null) {
-            @RegExp String name = PLAYERNAMES.get(player) == null ? player.getName() : PLAYERNAMES.get(player);
             event.quitMessage(event.quitMessage().replaceText(
                     TextReplacementConfig.builder()
-                            .match(name)
+                            .match(getName(event.getPlayer()))
                             .replacement(PLAYERNAMES.get(player))
                             .build()));
         }
