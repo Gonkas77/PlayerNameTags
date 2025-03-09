@@ -2,9 +2,10 @@ package me.gonkas.playernametags.handlers;
 
 import me.gonkas.playernametags.PlayerNameTags;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextReplacementConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
@@ -37,13 +38,7 @@ public class NameTagHandler implements Listener {
         Player player = event.getPlayer();
 
         loadPlayer(player);
-        if (event.joinMessage() != null) {
-            event.joinMessage(event.joinMessage().replaceText(
-                    TextReplacementConfig.builder()
-                            .match(getName(event.getPlayer()))
-                            .replacement(PLAYERNAMES.get(player))
-                            .build()));
-        }
+        if (event.joinMessage() != null) {event.joinMessage(Component.text("§c" + getName(player) + " entered the death game."));}
     }
 
     public static void loadPlayer(Player player) {
@@ -101,19 +96,13 @@ public class NameTagHandler implements Listener {
     public static void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        if (event.quitMessage() != null) {
-            event.quitMessage(event.quitMessage().replaceText(
-                    TextReplacementConfig.builder()
-                            .match(getName(event.getPlayer()))
-                            .replacement(PLAYERNAMES.get(player))
-                            .build()));
-        }
+        if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getName(player) + " left the death game."));}
         unloadPlayer(player);
     }
 
     public static void unloadPlayer(Player player) {
         YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
-        String name = PLAYERNAMES.get(player);
+        String name = getName(player);
         if (name == null) return;
 
         if (name.isEmpty()) {PlayerNameTags.consoleInfo("Attempting to remove player name for '%s'.", player.getName());}
@@ -155,13 +144,11 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerDeath(PlayerDeathEvent event) {
-        if (event.deathMessage() != null) {
-            event.deathMessage(event.deathMessage().replaceText(
-                    TextReplacementConfig.builder()
-                            .match(getName(event.getPlayer()))
-                            .replacement(PLAYERNAMES.get(event.getPlayer()))
-                            .build()));
-        }
+        Player player = event.getPlayer();
+
+        if (event.deathMessage() != null) {event.deathMessage(Component.text("§4" + getName(player) + " died in the death game."));}
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p, Sound.ENTITY_BLAZE_DEATH, SoundCategory.MASTER, 100f, 0.5f));
+        player.setGameMode(GameMode.SPECTATOR);
     }
 
     @EventHandler
