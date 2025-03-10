@@ -1,5 +1,5 @@
 name: PlayerNameTags
-version: '0.0.5-fix3-custom-2'
+version: '0.0.5-fix4-custom3'
 main: me.gonkas.playernametags.PlayerNameTags
 api-version: '1.21'
 authors: [Gonkas77]
@@ -10,3 +10,9 @@ commands:
   removename:
     description: "Removes any existing custom name tags from a certain player."
     permission: playernametags.remove_names
+  lockchat:
+    description: "Prevents non-operators or non-'game-masters' (see config) from chatting or seeing player chat messages."
+    permission: playernametags.lock_chat
+  unlockchat:
+    description: "Prevents non-operators or non-'game-masters' (see config) from chatting or seeing player chat messages."
+    permission: playernametags.unlock_chat

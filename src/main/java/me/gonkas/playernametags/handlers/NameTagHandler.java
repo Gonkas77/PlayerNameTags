@@ -124,13 +124,13 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
-        if (event.isCancelled()) return;
-        if (PLAYERSTANDS.containsKey(event.getPlayer())) PLAYERSTANDS.get(event.getPlayer()).setCustomNameVisible(event.getPlayer().isSneaking() && !event.getPlayer().isFlying());
+        if (event.isCancelled() || event.getPlayer().isInsideVehicle()) return;
+        if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getPlayer().isSneaking() && !event.getPlayer().isFlying());
     }
 
     @EventHandler
     public static void onSpectatorMode(PlayerGameModeChangeEvent event) {
-        if (PLAYERSTANDS.containsKey(event.getPlayer())) PLAYERSTANDS.get(event.getPlayer()).setCustomNameVisible(event.getNewGameMode() != GameMode.SPECTATOR);
+        if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getNewGameMode() != GameMode.SPECTATOR);
     }
 
     @EventHandler
@@ -138,8 +138,8 @@ public class NameTagHandler implements Listener {
         if (event.getEntityType() != EntityType.PLAYER) return;
         if (!PLAYERSTANDS.containsKey((Player) event.getEntity()) || event.getModifiedType() != PotionEffectType.INVISIBILITY) return;
 
-        if (event.getAction() == EntityPotionEffectEvent.Action.ADDED) PLAYERSTANDS.get((Player) event.getEntity()).setCustomNameVisible(false);
-        else if (event.getAction() != EntityPotionEffectEvent.Action.CHANGED) PLAYERSTANDS.get((Player) event.getEntity()).setCustomNameVisible(true);
+        if (event.getAction() == EntityPotionEffectEvent.Action.ADDED) setNameVisible((Player) event.getEntity(), false);
+        else if (event.getAction() != EntityPotionEffectEvent.Action.CHANGED) setNameVisible((Player) event.getEntity(), true);
     }
 
     @EventHandler
@@ -158,5 +158,9 @@ public class NameTagHandler implements Listener {
 
     public static String getName(Player player) {
         return PLAYERNAMES.get(player) == null ? player.getName() : PLAYERNAMES.get(player);
+    }
+
+    public static void setNameVisible(Player player, boolean bool) {
+        if (PLAYERSTANDS.containsKey(player)) PLAYERSTANDS.get(player).setCustomNameVisible(bool);
     }
 }

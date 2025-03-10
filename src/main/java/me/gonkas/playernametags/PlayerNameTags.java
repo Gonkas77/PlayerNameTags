@@ -1,8 +1,11 @@
 package me.gonkas.playernametags;
 
+import me.gonkas.playernametags.commands.LockChatCommand;
 import me.gonkas.playernametags.commands.NameCommand;
 import me.gonkas.playernametags.commands.RemoveNameCommand;
+import me.gonkas.playernametags.commands.UnlockChatCommand;
 import me.gonkas.playernametags.handlers.ConfigHandler;
+import me.gonkas.playernametags.handlers.CustomHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
@@ -48,10 +51,15 @@ public final class PlayerNameTags extends JavaPlugin {
         TEAM = MAINSCOREBOARD.getTeam("PlayerNameTags");
         if (TEAM == null) {TEAM = MAINSCOREBOARD.registerNewTeam("PlayerNameTags");}
         TEAM.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        TEAM.setCanSeeFriendlyInvisibles(false);
 
         Bukkit.getPluginManager().registerEvents(new NameTagHandler(), this);
+        Bukkit.getPluginManager().registerEvents(new CustomHandler(), this);
+
         getCommand("name").setExecutor(new NameCommand());
         getCommand("removename").setExecutor(new RemoveNameCommand());
+        getCommand("lockchat").setExecutor(new LockChatCommand());
+        getCommand("unlockchat").setExecutor(new UnlockChatCommand());
 
         ConfigHandler.load();
         NameTagHandler.load();

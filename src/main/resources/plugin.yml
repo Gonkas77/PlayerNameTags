@@ -10,3 +10,9 @@ commands:
   removename:
     description: "Removes any existing custom name tags from a certain player."
     permission: playernametags.remove_names
+  lockchat:
+    description: "Prevents non-operators or non-'game-masters' (see config) from chatting or seeing player chat messages."
+    permission: playernametags.lock_chat
+  unlockchat:
+    description: "Prevents non-operators or non-'game-masters' (see config) from chatting or seeing player chat messages."
+    permission: playernametags.unlock_chat
