@@ -4,12 +4,9 @@ main: me.gonkas.playernametags.PlayerNameTags
 api-version: '1.21'
 authors: [Gonkas77]
 commands:
-  name:
+  nametag:
     description: "Creates a ghost entity following the player with a custom name to replace the player's name tag."
-    permission: playernametags.change_names
-  removename:
-    description: "Removes any existing custom name tags from a certain player."
-    permission: playernametags.remove_names
+    permission: playernametags.nametag
   lockchat:
     description: "Prevents non-operators or non-'game-masters' (see config) from chatting or seeing player chat messages."
     permission: playernametags.lock_chat

@@ -53,8 +53,7 @@ public final class PlayerNameTags extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new NameTagHandler(), this);
         Bukkit.getPluginManager().registerEvents(new CustomHandler(), this);
 
-        getCommand("name").setExecutor(new NameCommand());
-        getCommand("removename").setExecutor(new RemoveNameCommand());
+        getCommand("nametag").setExecutor(new NameTagCommand());
         getCommand("lockchat").setExecutor(new LockChatCommand());
         getCommand("unlockchat").setExecutor(new UnlockChatCommand());
         getCommand("gamemaster").setExecutor(new GameMasterCommand());
