@@ -16,3 +16,6 @@ commands:
   unlockchat:
     description: "Prevents non-operators or non-'game-masters' (see config) from chatting or seeing player chat messages."
     permission: playernametags.unlock_chat
+  gamemaster:
+    description: "???"
+    permission: playernametags.admin

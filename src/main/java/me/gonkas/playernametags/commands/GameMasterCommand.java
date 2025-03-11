@@ -30,6 +30,8 @@ public class GameMasterCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (args.length == 1) {commandSender.sendMessage("Missing argument <player>!"); return true;}
+
         Player target = Bukkit.getPlayerExact(args[1]);
         if (target == null) {commandSender.sendMessage("§cPlayer not found!"); return true;}
 

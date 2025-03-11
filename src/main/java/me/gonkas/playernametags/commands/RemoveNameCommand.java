@@ -23,7 +23,7 @@ public class RemoveNameCommand implements CommandExecutor, TabCompleter {
             if (target == null) {commandSender.sendMessage("§cPlayer not found!"); return true;}
         }
 
-        NameTagHandler.removeNameTag(target);
+        NameTagHandler.resetNameTag(target);
         return true;
     }
 

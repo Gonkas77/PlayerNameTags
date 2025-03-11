@@ -30,36 +30,49 @@ public class NameTagHandler implements Listener {
     private static HashMap<Player, List<String>> PLAYERNAMES = new HashMap<>(0);
     private static HashMap<Player, ArmorStand> PLAYERSTANDS = new HashMap<>(0);
 
-    public static void load() {
-        Bukkit.getOnlinePlayers().forEach(NameTagHandler::loadPlayer);
-    }
+    public static void load() {Bukkit.getOnlinePlayers().forEach(NameTagHandler::loadPlayer);}
+    public static void unload() {Bukkit.getOnlinePlayers().forEach(NameTagHandler::unloadPlayer);}
 
-    @EventHandler
-    public static void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-
-        loadPlayer(player);
-        if (event.joinMessage() != null) {event.joinMessage(Component.text("§c" + getName(player) + "§c entered the death game."));}
-    }
-
-    public static void loadPlayer(Player player) {
+    private static void loadPlayer(Player player) {
         YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
-        String name = names.getString(player.getUniqueId().toString());
-        if (name == null || name.isEmpty()) return;
+        String prefix = names.getString(player.getUniqueId() + ".prefix");
+        String name = names.getString(player.getUniqueId() + ".name");
+        String suffix = names.getString(player.getUniqueId() + ".suffix");
+        if (prefix == null || name == null || suffix == null) {PlayerNameTags.consoleError("Unable to load player %s's nickname! Check the name file.", player.getName()); return;}
 
-        TEAM.addPlayer(player);
-        player.playerListName(Component.text(name));
-        player.displayName(Component.text(name));
-
-        createNameTag(player, name);
+        createNameTag(player, prefix, name, suffix);
         PlayerNameTags.consoleInfo("Creating Name Tag for player '%s'.", player.getName());
     }
 
-    public static void createNameTag(Player player, String name) {
-        if (PLAYERSTANDS.containsKey(player)) {updateNameTag(player, name); return;}
+    private static void unloadPlayer(Player player) {
+        YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
+
+        names.set(player.getUniqueId() + ".prefix", getPrefix(player));
+        names.set(player.getUniqueId() + ".name", getName(player));
+        names.set(player.getUniqueId() + ".suffix", getSuffix(player));
+
+        PlayerNameTags.consoleInfo("Attempting to save player name for '%s'.", player.getName());
+
+        try {names.save(NAMEFILE);}
+        catch (IOException e) {PlayerNameTags.consoleError("Unable to save player name file!");}
+        finally {PlayerNameTags.consoleInfo("Successfully saved player name file.");}
+
+        PLAYERNAMES.remove(player);
+        PLAYERSTANDS.get(player).remove();
+        PLAYERSTANDS.remove(player);
+
+        TEAM.removePlayer(player);
+
+        PlayerNameTags.consoleInfo("Deleted name tag entity for player '%s'.", player.getName());
+    }
+
+    public static void createNameTag(Player player, String prefix, String name, String suffix) {
+        if (PLAYERSTANDS.containsKey(player)) {return;}
+
+        Component nick = Component.text(prefix + " " + name + " " + suffix);
 
         ArmorStand stand = player.getWorld().spawn(player.getLocation(), ArmorStand.class);
-        stand.customName(Component.text(name));
+        stand.customName(nick);
         stand.setCustomNameVisible(true);
         stand.setVisible(false);
         stand.setGravity(false);
@@ -69,28 +82,40 @@ public class NameTagHandler implements Listener {
         if (!player.addPassenger(stand)) {PlayerNameTags.consoleWarn("Unable to anchor armor stand onto player '%s'.", player.getName());}
 
         PLAYERSTANDS.put(player, stand);
-        setName(player, name);
+        setFullName(player, prefix, name, suffix);
+
+        TEAM.addPlayer(player);
+        player.playerListName(nick);
+        player.displayName(nick);
 
         PlayerNameTags.consoleInfo("Successfully created Name Tag '%s§r' for player '%s'.", name, player.getName());
     }
 
-    public static void updateNameTag(Player player, String name) {
-        PLAYERSTANDS.get(player).customName(Component.text(name));
-        setName(player, name);
+    public static void updateNameTag(Player player) {
+        if (!PLAYERNAMES.containsKey(player)) return;
 
-        player.playerListName(Component.text(name));
-        player.displayName(Component.text(name));
+        Component name = Component.text(getFullName(player));
 
-        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), name);
+        PLAYERSTANDS.get(player).customName(name);
+        player.playerListName(name);
+        player.displayName(name);
+
+        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), name.toString());
     }
 
-    public static void removeNameTag(Player player) {
-        setName(player, "§");
-        unloadPlayer(player);
+    public static void resetNameTag(Player player) {
+        setFullName(player, "", "", "");
+        updateNameTag(player);
     }
 
-    public static void unload() {
-        Bukkit.getOnlinePlayers().forEach(NameTagHandler::unloadPlayer);
+    // ----------------------------------------------------------------------------------------------------------------------------------------------
+
+    @EventHandler
+    public static void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        loadPlayer(player);
+        if (event.joinMessage() != null) {event.joinMessage(Component.text("§c" + getName(player) + "§c entered the death game."));}
     }
 
     @EventHandler
@@ -99,29 +124,6 @@ public class NameTagHandler implements Listener {
 
         if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getName(player) + "§c left the death game."));}
         unloadPlayer(player);
-    }
-
-    public static void unloadPlayer(Player player) {
-        if (!hasName(player)) return;
-
-        YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
-        String name = getName(player);
-
-        if (name.equals("§")) {PlayerNameTags.consoleInfo("Attempting to remove player name for '%s'.", player.getName());}
-        else {PlayerNameTags.consoleInfo("Attempting to update player name for '%s'.", player.getName());}
-
-        names.set(player.getUniqueId().toString(), name);
-        try {names.save(NAMEFILE);}
-        catch (IOException e) {PlayerNameTags.consoleError("Unable to update player name file!");}
-        finally {PlayerNameTags.consoleInfo("Successfully updated player name file.");}
-
-        PLAYERNAMES.remove(player);
-        PLAYERSTANDS.get(player).remove();
-        PLAYERSTANDS.remove(player);
-
-        TEAM.removePlayer(player);
-
-        PlayerNameTags.consoleInfo("Deleted name tag for player '%s'.", player.getName());
     }
 
     @EventHandler
@@ -158,7 +160,7 @@ public class NameTagHandler implements Listener {
         event.getPlayer().addPassenger(PLAYERSTANDS.get(event.getPlayer()));
     }
 
-    // ------------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------------------------------------------------
 
     public static String getPrefix(Player player) {return hasPrefix(player) ? PLAYERNAMES.get(player).getFirst() + "§r" : "";}
     public static boolean hasPrefix(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).getFirst().isEmpty();}
