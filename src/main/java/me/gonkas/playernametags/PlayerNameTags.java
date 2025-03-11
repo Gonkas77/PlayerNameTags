@@ -1,9 +1,6 @@
 package me.gonkas.playernametags;
 
-import me.gonkas.playernametags.commands.LockChatCommand;
-import me.gonkas.playernametags.commands.NameCommand;
-import me.gonkas.playernametags.commands.RemoveNameCommand;
-import me.gonkas.playernametags.commands.UnlockChatCommand;
+import me.gonkas.playernametags.commands.*;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.CustomHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
@@ -60,6 +57,7 @@ public final class PlayerNameTags extends JavaPlugin {
         getCommand("removename").setExecutor(new RemoveNameCommand());
         getCommand("lockchat").setExecutor(new LockChatCommand());
         getCommand("unlockchat").setExecutor(new UnlockChatCommand());
+        getCommand("gamemaster").setExecutor(new GameMasterCommand());
 
         ConfigHandler.load();
         NameTagHandler.load();
@@ -70,6 +68,8 @@ public final class PlayerNameTags extends JavaPlugin {
     @Override
     public void onDisable() {
         NameTagHandler.unload();
+        ConfigHandler.unload();
+        saveConfig();
     }
 
     public static void consoleError(String message, String... args) {CONSOLE.sendMessage(String.format(ERRORPREFIX + message, (Object[]) args));}

@@ -20,13 +20,14 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 import static me.gonkas.playernametags.PlayerNameTags.NAMEFILE;
 import static me.gonkas.playernametags.PlayerNameTags.TEAM;
 
 public class NameTagHandler implements Listener {
 
-    private static HashMap<Player, String> PLAYERNAMES = new HashMap<>(0);
+    private static HashMap<Player, List<String>> PLAYERNAMES = new HashMap<>(0);
     private static HashMap<Player, ArmorStand> PLAYERSTANDS = new HashMap<>(0);
 
     public static void load() {
@@ -38,7 +39,7 @@ public class NameTagHandler implements Listener {
         Player player = event.getPlayer();
 
         loadPlayer(player);
-        if (event.joinMessage() != null) {event.joinMessage(Component.text("§c" + getName(player) + " entered the death game."));}
+        if (event.joinMessage() != null) {event.joinMessage(Component.text("§c" + getName(player) + "§c entered the death game."));}
     }
 
     public static void loadPlayer(Player player) {
@@ -68,23 +69,23 @@ public class NameTagHandler implements Listener {
         if (!player.addPassenger(stand)) {PlayerNameTags.consoleWarn("Unable to anchor armor stand onto player '%s'.", player.getName());}
 
         PLAYERSTANDS.put(player, stand);
-        PLAYERNAMES.put(player, name);
+        setName(player, name);
 
-        PlayerNameTags.consoleInfo("Successfully created Name Tag for player '%s'.", player.getName());
+        PlayerNameTags.consoleInfo("Successfully created Name Tag '%s§r' for player '%s'.", name, player.getName());
     }
 
     public static void updateNameTag(Player player, String name) {
         PLAYERSTANDS.get(player).customName(Component.text(name));
-        PLAYERNAMES.replace(player, name);
+        setName(player, name);
 
         player.playerListName(Component.text(name));
         player.displayName(Component.text(name));
 
-        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s'.", player.getName(), name);
+        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), name);
     }
 
     public static void removeNameTag(Player player) {
-        PLAYERNAMES.replace(player, "");
+        setName(player, "§");
         unloadPlayer(player);
     }
 
@@ -96,16 +97,17 @@ public class NameTagHandler implements Listener {
     public static void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getName(player) + " left the death game."));}
+        if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getName(player) + "§c left the death game."));}
         unloadPlayer(player);
     }
 
     public static void unloadPlayer(Player player) {
+        if (!hasName(player)) return;
+
         YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
         String name = getName(player);
-        if (name == null) return;
 
-        if (name.isEmpty()) {PlayerNameTags.consoleInfo("Attempting to remove player name for '%s'.", player.getName());}
+        if (name.equals("§")) {PlayerNameTags.consoleInfo("Attempting to remove player name for '%s'.", player.getName());}
         else {PlayerNameTags.consoleInfo("Attempting to update player name for '%s'.", player.getName());}
 
         names.set(player.getUniqueId().toString(), name);
@@ -146,7 +148,7 @@ public class NameTagHandler implements Listener {
     public static void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getPlayer();
 
-        if (event.deathMessage() != null) {event.deathMessage(Component.text("§4" + getName(player) + " died in the death game."));}
+        if (event.deathMessage() != null) {event.deathMessage(Component.text("§4" + getName(player) + "§4 died in the death game."));}
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p, Sound.ENTITY_BLAZE_DEATH, SoundCategory.MASTER, 100f, 0.5f));
         player.setGameMode(GameMode.SPECTATOR);
     }
@@ -156,11 +158,32 @@ public class NameTagHandler implements Listener {
         event.getPlayer().addPassenger(PLAYERSTANDS.get(event.getPlayer()));
     }
 
-    public static String getName(Player player) {
-        return PLAYERNAMES.get(player) == null ? player.getName() : PLAYERNAMES.get(player);
+    // ------------------------------------------------------------------------------------------------------
+
+    public static String getPrefix(Player player) {return hasPrefix(player) ? PLAYERNAMES.get(player).getFirst() + "§r" : "";}
+    public static boolean hasPrefix(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).getFirst().isEmpty();}
+    public static void setPrefix(Player player, String prefix) {
+        if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(0, prefix);
+        else {PLAYERNAMES.put(player, List.of(prefix, "", ""));}
     }
 
-    public static void setNameVisible(Player player, boolean bool) {
-        if (PLAYERSTANDS.containsKey(player)) PLAYERSTANDS.get(player).setCustomNameVisible(bool);
+    public static String getName(Player player) {return hasName(player) ? PLAYERNAMES.get(player).get(1) + "§r" : player.getName();}
+    public static boolean hasName(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).get(1).isEmpty();}
+    public static void setName(Player player, String name) {
+        if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(1, name);
+        else {PLAYERNAMES.put(player, List.of("", name, ""));}
     }
+
+    public static String getSuffix(Player player) {return hasSuffix(player) ? PLAYERNAMES.get(player).getLast() + "§r" : "";}
+    public static boolean hasSuffix(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).getLast().isEmpty();}
+    public static void setSuffix(Player player, String suffix) {
+        if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(2, suffix);
+        else {PLAYERNAMES.put(player, List.of("", "", suffix));}
+    }
+
+    public static String getFullName(Player player) {return getPrefix(player) + getName(player) + getSuffix(player);}
+    public static void setFullName(Player player, String prefix, String name, String suffix) {setPrefix(player, prefix); setName(player, name); setSuffix(player, suffix);}
+
+    public static boolean isNameVisible(Player player) {return PLAYERSTANDS.containsKey(player) ? PLAYERSTANDS.get(player).isCustomNameVisible() : player.isInvisible();}
+    public static void setNameVisible(Player player, boolean bool) {if (PLAYERSTANDS.containsKey(player)) PLAYERSTANDS.get(player).setCustomNameVisible(bool);}
 }
