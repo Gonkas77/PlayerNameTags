@@ -2,11 +2,16 @@
 valid-name-characters: "abcdefghijklmnopqrstuvwxyz1234567890.-_ "
 
 # Maximum length for names
-max-name-length: 24
+max-name-length: 16
+
+# Maximum length for prefixes
+max-prefix-length: 8
+
+# Maximum length for suffixes
+max-suffix-length: 8
 
 # Whether colors are enabled or not
 enable-colors: true
 
 # Game masters
 game-masters:
-  - "44e86468-37f4-4b17-b2e2-b2368bb24a93"

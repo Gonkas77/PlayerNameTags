@@ -34,7 +34,7 @@ public class CustomHandler implements Listener {
         event.setCancelled(true);
         if (event.getPlayer().isOp() || ConfigHandler.isGameMaster(event.getPlayer())) {
             Bukkit.getOnlinePlayers().stream().filter(p -> p.isOp() || p == event.getPlayer()).forEach(
-                    p -> p.sendMessage(Component.text("<" + NameTagHandler.getName(event.getPlayer()) + "> ").append(event.message())));
+                    p -> p.sendMessage(Component.text("<" + NameTagHandler.getFullName(event.getPlayer()) + "> ").append(event.message())));
         }
     }
 

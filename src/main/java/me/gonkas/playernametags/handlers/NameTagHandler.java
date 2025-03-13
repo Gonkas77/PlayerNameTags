@@ -19,6 +19,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.potion.PotionEffectType;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,17 +28,27 @@ import static me.gonkas.playernametags.PlayerNameTags.TEAM;
 
 public class NameTagHandler implements Listener {
 
-    private static HashMap<Player, List<String>> PLAYERNAMES = new HashMap<>(0);
-    private static HashMap<Player, ArmorStand> PLAYERSTANDS = new HashMap<>(0);
+    private static final HashMap<Player, ArrayList<String>> PLAYERNAMES = new HashMap<>(0);
+    private static final HashMap<Player, ArmorStand> PLAYERSTANDS = new HashMap<>(0);
 
     public static void load() {Bukkit.getOnlinePlayers().forEach(NameTagHandler::loadPlayer);}
     public static void unload() {Bukkit.getOnlinePlayers().forEach(NameTagHandler::unloadPlayer);}
 
     private static void loadPlayer(Player player) {
         YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
-        String prefix = names.getString(player.getUniqueId() + ".prefix");
-        String name = names.getString(player.getUniqueId() + ".name");
-        String suffix = names.getString(player.getUniqueId() + ".suffix");
+
+        String prefix_path = player.getUniqueId() + ".prefix";
+        String name_path = player.getUniqueId() + ".name";
+        String suffix_path = player.getUniqueId() + ".suffix";
+
+        if (!names.contains(prefix_path)) {names.set(prefix_path, "");}
+        if (!names.contains(name_path)) {names.set(name_path, player.getName() + "§r");}
+        if (!names.contains(suffix_path)) {names.set(suffix_path, "");}
+
+        String prefix = names.getString(prefix_path);
+        String name = names.getString(name_path);
+        String suffix = names.getString(suffix_path);
+
         if (prefix == null || name == null || suffix == null) {PlayerNameTags.consoleError("Unable to load player %s's nickname! Check the name file.", player.getName()); return;}
 
         createNameTag(player, prefix, name, suffix);
@@ -45,6 +56,7 @@ public class NameTagHandler implements Listener {
     }
 
     private static void unloadPlayer(Player player) {
+        if (!hasName(player)) return;
         YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
 
         names.set(player.getUniqueId() + ".prefix", getPrefix(player));
@@ -100,12 +112,7 @@ public class NameTagHandler implements Listener {
         player.playerListName(name);
         player.displayName(name);
 
-        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), name.toString());
-    }
-
-    public static void resetNameTag(Player player) {
-        setFullName(player, "", "", "");
-        updateNameTag(player);
+        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), getFullName(player));
     }
 
     // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,12 +135,13 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
-        if (event.isCancelled() || event.getPlayer().isInsideVehicle()) return;
-        if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getPlayer().isSneaking() && !event.getPlayer().isFlying());
+        if (event.isCancelled() || event.getPlayer().isInvisible() || event.getPlayer().isFlying()) return;
+        if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getPlayer().isSneaking());
     }
 
     @EventHandler
     public static void onSpectatorMode(PlayerGameModeChangeEvent event) {
+        if (event.isCancelled() || event.getPlayer().isInvisible()) return;
         if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getNewGameMode() != GameMode.SPECTATOR);
     }
 
@@ -162,28 +170,36 @@ public class NameTagHandler implements Listener {
 
     // ----------------------------------------------------------------------------------------------------------------------------------------------
 
-    public static String getPrefix(Player player) {return hasPrefix(player) ? PLAYERNAMES.get(player).getFirst() + "§r" : "";}
+    public static String getPrefix(Player player) {return hasPrefix(player) ? PLAYERNAMES.get(player).getFirst() : "";}
     public static boolean hasPrefix(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).getFirst().isEmpty();}
     public static void setPrefix(Player player, String prefix) {
         if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(0, prefix);
-        else {PLAYERNAMES.put(player, List.of(prefix, "", ""));}
+        else {PLAYERNAMES.put(player, new ArrayList<>(List.of(prefix, "", "")));}
+        updateNameTag(player);
     }
 
-    public static String getName(Player player) {return hasName(player) ? PLAYERNAMES.get(player).get(1) + "§r" : player.getName();}
+    public static String getName(Player player) {return hasName(player) ? PLAYERNAMES.get(player).get(1) : player.getName();}
     public static boolean hasName(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).get(1).isEmpty();}
     public static void setName(Player player, String name) {
         if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(1, name);
-        else {PLAYERNAMES.put(player, List.of("", name, ""));}
+        else {PLAYERNAMES.put(player, new ArrayList<>(List.of("", name, "")));}
+        updateNameTag(player);
     }
 
-    public static String getSuffix(Player player) {return hasSuffix(player) ? PLAYERNAMES.get(player).getLast() + "§r" : "";}
+    public static String getSuffix(Player player) {return hasSuffix(player) ? PLAYERNAMES.get(player).getLast() : "";}
     public static boolean hasSuffix(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).getLast().isEmpty();}
     public static void setSuffix(Player player, String suffix) {
         if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(2, suffix);
-        else {PLAYERNAMES.put(player, List.of("", "", suffix));}
+        else {PLAYERNAMES.put(player, new ArrayList<>(List.of("", "", suffix)));}
+        updateNameTag(player);
     }
 
-    public static String getFullName(Player player) {return getPrefix(player) + getName(player) + getSuffix(player);}
+    public static String getFullName(Player player) {
+        StringBuilder fullname = new StringBuilder(getName(player));
+        if (hasPrefix(player)) fullname.insert(0, getPrefix(player) + " ");
+        if (hasSuffix(player)) fullname.append(" ").append(getSuffix(player));
+        return fullname.toString();
+    }
     public static void setFullName(Player player, String prefix, String name, String suffix) {setPrefix(player, prefix); setName(player, name); setSuffix(player, suffix);}
 
     public static boolean isNameVisible(Player player) {return PLAYERSTANDS.containsKey(player) ? PLAYERSTANDS.get(player).isCustomNameVisible() : player.isInvisible();}

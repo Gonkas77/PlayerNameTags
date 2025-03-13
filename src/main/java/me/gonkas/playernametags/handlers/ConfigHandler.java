@@ -70,6 +70,10 @@ public class ConfigHandler {
 
     public static String getValidChars() {return VALIDCHARS;}
     public static void setValidChars(String chars) {VALIDCHARS = chars;}
+    public static boolean hasInvalidChars(String chars) {
+        for (char c : chars.toLowerCase().toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') {return true;}}
+        return false;
+    }
 
     public static int getMaxNameLength() {return MAXNAMELENGTH;}
     public static void setMaxNameLength(int num) {MAXNAMELENGTH = num;}
