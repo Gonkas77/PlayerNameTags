@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public class ConfigHandler {
     private static int MAXPREFIXLENGTH;
     private static int MAXSUFFIXLENGTH;
     private static boolean ALLOWCOLORS;
-    private static List<OfflinePlayer> GAMEMASTERS;
+    private static ArrayList<OfflinePlayer> GAMEMASTERS;
 
     private static final String VALIDCHARSPATH = "valid-name-characters";
     private static final String MAXNAMELENGTHPATH = "max-name-length";
@@ -32,7 +33,7 @@ public class ConfigHandler {
     private static final int DEFAULTPREFIXLENGTH = 8;
     private static final int DEFAULTSUFFIXLENGTH = 8;
     private static final boolean DEFAULTALLOWCOLORS = true;
-    private static final List<String> DEFAULTGMS = List.of("44e86468-37f4-4b17-b2e2-b2368bb24a93");
+    private static final ArrayList<String> DEFAULTGMS = new ArrayList<>(List.of("44e86468-37f4-4b17-b2e2-b2368bb24a93"));
 
     public static void load() {
         fixConfigPaths(CONFIG);
@@ -42,7 +43,7 @@ public class ConfigHandler {
         MAXPREFIXLENGTH = CONFIG.getInt(MAXPREFIXLENGTHPATH);
         MAXSUFFIXLENGTH = CONFIG.getInt(MAXSUFFIXLENGTHPATH);
         ALLOWCOLORS = CONFIG.getBoolean(ALLOWCOLORSPATH);
-        GAMEMASTERS = CONFIG.getStringList(GAMEMASTERSPATH).stream().map(e -> Bukkit.getOfflinePlayer(UUID.fromString(e))).toList();
+        GAMEMASTERS = new ArrayList<>(CONFIG.getStringList(GAMEMASTERSPATH).stream().map(e -> Bukkit.getOfflinePlayer(UUID.fromString(e))).toList());
     }
     
     public static void unload() {
@@ -88,7 +89,7 @@ public class ConfigHandler {
     public static boolean getAllowColors() {return ALLOWCOLORS;}
     public static void setAllowColors(boolean value) {ALLOWCOLORS = value;}
 
-    public static List<OfflinePlayer> getGameMasters() {return GAMEMASTERS;}
+    public static ArrayList<OfflinePlayer> getGameMasters() {return GAMEMASTERS;}
     public static void addGameMaster(Player player) {if (!isGameMaster(player)) GAMEMASTERS.add(player);}
     public static void removeGameMaster(Player player) {GAMEMASTERS.remove(player);}
     public static boolean isGameMaster(Player player) {return GAMEMASTERS.contains(player);}

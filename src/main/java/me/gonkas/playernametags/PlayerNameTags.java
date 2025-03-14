@@ -4,6 +4,7 @@ import me.gonkas.playernametags.commands.*;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.CustomHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
+import me.gonkas.playernametags.util.Strings;
 import me.gonkas.playernametags.util.TextType;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
@@ -97,9 +98,9 @@ public final class PlayerNameTags extends JavaPlugin {
             try {UUID.fromString(path);}
             catch (IllegalArgumentException e) {return;}
 
-            if (!names.contains(path + ".prefix") || !NameTagCommand.textIsValid(names.getString(path + ".prefix"), TextType.PREFIX)) names.set(path + ".prefix", "");
-            if (!names.contains(path + ".name") || !NameTagCommand.textIsValid(names.getString(path + ".name"), TextType.NAME)) {names.set(path + ".name", NameTagCommand.textIsValid(names.getString(path), TextType.NAME) ? names.getString(path) : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
-            if (!names.contains(path + ".suffix") || !NameTagCommand.textIsValid(names.getString(path + ".suffix"), TextType.SUFFIX)) names.set(path + ".suffix", "");
+            if (!names.contains(path + ".prefix") || !Strings.textIsValid(names.getString(path + ".prefix"), TextType.PREFIX)) names.set(path + ".prefix", "");
+            if (!names.contains(path + ".name") || !Strings.textIsValid(names.getString(path + ".name"), TextType.NAME)) {names.set(path + ".name", Strings.textIsValid(names.getString(path), TextType.NAME) ? names.getString(path) : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
+            if (!names.contains(path + ".suffix") || !Strings.textIsValid(names.getString(path + ".suffix"), TextType.SUFFIX)) names.set(path + ".suffix", "");
             if (!names.contains(path + ".hidden") || !(names.get(path + ".hidden") instanceof Boolean)) names.set(path + ".hidden", false);
         });
 

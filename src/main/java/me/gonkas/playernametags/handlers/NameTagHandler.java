@@ -190,6 +190,11 @@ public class NameTagHandler implements Listener {
     }
 
     public static String getName(Player player) {return hasName(player) ? PLAYERNAMES.get(player).get(1) : player.getName();}
+    public static String getTrueName(Player player) { // Returns getName() without formatting.
+        StringBuilder name = new StringBuilder(getName(player));
+        for (int i=0; i < name.length(); i++) {if (name.charAt(i) == '§') name.replace(i, i+2, "");}
+        return name.toString();
+    }
     public static boolean hasName(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).get(1).isEmpty();}
     public static void setName(Player player, String name) {
         if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(1, name);

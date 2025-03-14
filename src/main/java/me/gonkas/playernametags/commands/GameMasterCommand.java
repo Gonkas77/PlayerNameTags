@@ -1,7 +1,9 @@
 package me.gonkas.playernametags.commands;
 
+import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
+import me.gonkas.playernametags.util.Strings;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -44,18 +46,22 @@ public class GameMasterCommand implements CommandExecutor, TabCompleter {
             }
             case "hide" -> {
                 if (!ConfigHandler.isGameMaster(target)) {sender.sendMessage("§cPlayer is not a Game Master!"); return true;}
+                if (isGameMasterHidden(target)) {sender.sendMessage("§cGame Master is already hidden!"); return true;}
                 NameTagHandler.setPrefix(target, "");
-                NameTagHandler.setName(target, "§r" + NameTagHandler.getName(target));
+                NameTagHandler.setName(target, NameTagHandler.getTrueName(target));
                 sender.sendMessage("§cHid Game Master " + NameTagHandler.getFullName(target) + "§c.");
             }
             case "remove" -> {
                 ConfigHandler.removeGameMaster(target);
+                NameTagHandler.setPrefix(target, "");
+                NameTagHandler.setName(target, NameTagHandler.getTrueName(target));
                 sender.sendMessage(NameTagHandler.getName(target) + " is no longer a Game Master.");
             }
             case "reveal" -> {
                 if (!ConfigHandler.isGameMaster(target)) {sender.sendMessage("§cPlayer is not a Game Master!"); return true;}
+                if (!isGameMasterHidden(target)) {sender.sendMessage("§cPlayer is already revealed as a Game Master!"); return true;}
                 NameTagHandler.setPrefix(target, GAMEMASTERPREFIX);
-                NameTagHandler.setName(target, "§c" + NameTagHandler.getName(target));
+                NameTagHandler.setName(target, "§c" + NameTagHandler.getTrueName(target));
                 sender.sendMessage("§cRevealed Game Master " + NameTagHandler.getFullName(target) + "§c.");
             }
         }
@@ -67,17 +73,17 @@ public class GameMasterCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         if (args.length == 1) return SUBCOMMANDS;
         if (args.length == 2) {
-            return switch (args[1]) {
-                case "add" -> Bukkit.getOnlinePlayers().stream().filter(p -> !ConfigHandler.isGameMaster(p)).map(Player::getName).toList();
-                case "hide" -> Bukkit.getOnlinePlayers().stream().filter(p -> !isGameMasterHidden(p)).map(Player::getName).toList();
-                case "remove" -> Bukkit.getOnlinePlayers().stream().filter(ConfigHandler::isGameMaster).map(Player::getName).toList();
-                case "reveal" -> Bukkit.getOnlinePlayers().stream().filter(GameMasterCommand::isGameMasterHidden).map(Player::getName).toList();
+            return switch (args[0]) {
+                case "add" -> Strings.matchOnlinePlayersName(args[1], p -> !ConfigHandler.isGameMaster(p));
+                case "hide" -> Strings.matchOnlinePlayersName(args[1], p -> ConfigHandler.isGameMaster(p) && !isGameMasterHidden(p));
+                case "remove" -> Strings.matchOnlinePlayersName(args[1], ConfigHandler::isGameMaster);
+                case "reveal" -> Strings.matchOnlinePlayersName(args[1], p -> ConfigHandler.isGameMaster(p) && isGameMasterHidden(p));
                 default -> List.of();
             };
         } return List.of();
     }
 
     private static boolean isGameMasterHidden(Player player) {
-        return ConfigHandler.isGameMaster(player) && !NameTagHandler.getPrefix(player).equals(GAMEMASTERPREFIX);
+        return !NameTagHandler.getPrefix(player).equals(GAMEMASTERPREFIX);
     }
 }
