@@ -1,5 +1,5 @@
 name: PlayerNameTags
-version: '0.0.7-custom'
+version: '0.0.8-custom'
 main: me.gonkas.playernametags.PlayerNameTags
 api-version: '1.21'
 authors: [Gonkas77]

@@ -29,6 +29,7 @@ import static me.gonkas.playernametags.PlayerNameTags.TEAM;
 public class NameTagHandler implements Listener {
 
     private static final HashMap<Player, ArrayList<String>> PLAYERNAMES = new HashMap<>(0);
+    private static final HashMap<Player, Boolean> PLAYERNAMESTOGGLE = new HashMap<>(0);
     private static final HashMap<Player, ArmorStand> PLAYERSTANDS = new HashMap<>(0);
 
     public static void load() {Bukkit.getOnlinePlayers().forEach(NameTagHandler::loadPlayer);}
@@ -40,18 +41,21 @@ public class NameTagHandler implements Listener {
         String prefix_path = player.getUniqueId() + ".prefix";
         String name_path = player.getUniqueId() + ".name";
         String suffix_path = player.getUniqueId() + ".suffix";
+        String hidden_path = player.getUniqueId() + ".hidden";
 
         if (!names.contains(prefix_path)) {names.set(prefix_path, "");}
         if (!names.contains(name_path)) {names.set(name_path, player.getName() + "§r");}
         if (!names.contains(suffix_path)) {names.set(suffix_path, "");}
+        if (!names.contains(hidden_path)) {names.set(hidden_path, false);}
 
         String prefix = names.getString(prefix_path);
         String name = names.getString(name_path);
         String suffix = names.getString(suffix_path);
+        boolean hidden = names.getBoolean(hidden_path);
 
         if (prefix == null || name == null || suffix == null) {PlayerNameTags.consoleError("Unable to load player %s's nickname! Check the name file.", player.getName()); return;}
 
-        createNameTag(player, prefix, name, suffix);
+        createNameTag(player, prefix, name, suffix, hidden);
         PlayerNameTags.consoleInfo("Creating Name Tag for player '%s'.", player.getName());
     }
 
@@ -62,6 +66,7 @@ public class NameTagHandler implements Listener {
         names.set(player.getUniqueId() + ".prefix", getPrefix(player));
         names.set(player.getUniqueId() + ".name", getName(player));
         names.set(player.getUniqueId() + ".suffix", getSuffix(player));
+        names.set(player.getUniqueId() + ".hidden", isNameTagHidden(player));
 
         PlayerNameTags.consoleInfo("Attempting to save player name for '%s'.", player.getName());
 
@@ -70,6 +75,7 @@ public class NameTagHandler implements Listener {
         finally {PlayerNameTags.consoleInfo("Successfully saved player name file.");}
 
         PLAYERNAMES.remove(player);
+        PLAYERNAMESTOGGLE.remove(player);
         PLAYERSTANDS.get(player).remove();
         PLAYERSTANDS.remove(player);
 
@@ -78,7 +84,7 @@ public class NameTagHandler implements Listener {
         PlayerNameTags.consoleInfo("Deleted name tag entity for player '%s'.", player.getName());
     }
 
-    public static void createNameTag(Player player, String prefix, String name, String suffix) {
+    public static void createNameTag(Player player, String prefix, String name, String suffix, boolean isNameTagHidden) {
         if (PLAYERSTANDS.containsKey(player)) {return;}
 
         Component nick = Component.text(prefix + " " + name + " " + suffix);
@@ -95,6 +101,7 @@ public class NameTagHandler implements Listener {
 
         PLAYERSTANDS.put(player, stand);
         setFullName(player, prefix, name, suffix);
+        toggleNameTag(player, !isNameTagHidden);
 
         TEAM.addPlayer(player);
         player.playerListName(nick);
@@ -135,20 +142,24 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
-        if (event.isCancelled() || event.getPlayer().isInvisible() || event.getPlayer().isFlying()) return;
+        Player player = event.getPlayer();
+        if (event.isCancelled() || player.isInvisible() || player.isFlying() || isNameTagHidden(player)) return;
         if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getPlayer().isSneaking());
     }
 
     @EventHandler
     public static void onSpectatorMode(PlayerGameModeChangeEvent event) {
-        if (event.isCancelled() || event.getPlayer().isInvisible()) return;
-        if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getNewGameMode() != GameMode.SPECTATOR);
+        Player player = event.getPlayer();
+        if (event.isCancelled() || player.isInvisible() || isNameTagHidden(player)) return;
+        if (PLAYERSTANDS.containsKey(player)) setNameVisible(player, event.getNewGameMode() != GameMode.SPECTATOR);
     }
 
     @EventHandler
     public static void onPlayerInvis(EntityPotionEffectEvent event) {
-        if (event.getEntityType() != EntityType.PLAYER) return;
-        if (!PLAYERSTANDS.containsKey((Player) event.getEntity()) || event.getModifiedType() != PotionEffectType.INVISIBILITY) return;
+        Player player = event.getEntityType() == EntityType.PLAYER ? (Player) event.getEntity() : null;
+        if (player == null) return;
+
+        if (!PLAYERSTANDS.containsKey(player) || event.getModifiedType() != PotionEffectType.INVISIBILITY || isNameTagHidden(player)) return;
 
         if (event.getAction() == EntityPotionEffectEvent.Action.ADDED) setNameVisible((Player) event.getEntity(), false);
         else if (event.getAction() != EntityPotionEffectEvent.Action.CHANGED) setNameVisible((Player) event.getEntity(), true);
@@ -204,4 +215,11 @@ public class NameTagHandler implements Listener {
 
     public static boolean isNameVisible(Player player) {return PLAYERSTANDS.containsKey(player) ? PLAYERSTANDS.get(player).isCustomNameVisible() : player.isInvisible();}
     public static void setNameVisible(Player player, boolean bool) {if (PLAYERSTANDS.containsKey(player)) PLAYERSTANDS.get(player).setCustomNameVisible(bool);}
+
+    public static boolean isNameTagHidden(Player player) {return PLAYERNAMESTOGGLE.containsKey(player) && !PLAYERNAMESTOGGLE.get(player);}
+    public static void toggleNameTag(Player player, boolean bool) {
+        if (PLAYERNAMESTOGGLE.containsKey(player)) {PLAYERNAMESTOGGLE.replace(player, bool); setNameVisible(player, bool);}
+        else {PLAYERNAMESTOGGLE.put(player, bool); setNameVisible(player, bool);}
+    }
+    public static void toggleNameTag(Player player) {toggleNameTag(player, !PLAYERNAMESTOGGLE.get(player));}
 }

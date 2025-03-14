@@ -1,5 +1,6 @@
 package me.gonkas.playernametags.handlers;
 
+import me.gonkas.playernametags.PlayerNameTags;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -71,7 +72,7 @@ public class ConfigHandler {
     public static String getValidChars() {return VALIDCHARS;}
     public static void setValidChars(String chars) {VALIDCHARS = chars;}
     public static boolean hasInvalidChars(String chars) {
-        for (char c : chars.toLowerCase().toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') {return true;}}
+        for (char c : chars.toLowerCase().toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') return true;}
         return false;
     }
 

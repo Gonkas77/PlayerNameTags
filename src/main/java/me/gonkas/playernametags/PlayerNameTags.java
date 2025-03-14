@@ -4,6 +4,7 @@ import me.gonkas.playernametags.commands.*;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.CustomHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
+import me.gonkas.playernametags.util.TextType;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -23,7 +24,7 @@ public final class PlayerNameTags extends JavaPlugin {
 
     public static ConsoleCommandSender CONSOLE;
     private static final String PLUGINPREFIX = "[PlayerNameTags/";
-    private static final String ERRORPREFIX = "§4" + PLUGINPREFIX + "ERROR] ";
+    private static final String ERRORPREFIX = "§c" + PLUGINPREFIX + "ERROR] ";
     private static final String INFOPREFIX = "§7" + PLUGINPREFIX + "INFO] ";
     private static final String WARNPREFIX = "§e" + PLUGINPREFIX + "WARN] ";
 
@@ -32,7 +33,7 @@ public final class PlayerNameTags extends JavaPlugin {
 
     public static FileConfiguration CONFIG;
     public static File NAMEFILE;
-    private static final int NAMEFILEVERSION = 1;
+    private static final int NAMEFILEVERSION = 2;
 
     public static ScoreboardManager SCOREBOARDMANAGER;
     public static Scoreboard MAINSCOREBOARD;
@@ -49,6 +50,7 @@ public final class PlayerNameTags extends JavaPlugin {
 
         CONFIG = getConfig();
         CONSOLE = Bukkit.getConsoleSender();
+        ConfigHandler.load();
 
         NAMEFILE = new File(PLUGINFOLDER, "player_names.yml");
         try {NAMEFILE.createNewFile();} catch (IOException e) {consoleError("Unable to create player name file."); throw new RuntimeException(e);}
@@ -62,6 +64,8 @@ public final class PlayerNameTags extends JavaPlugin {
         TEAM.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
         TEAM.setCanSeeFriendlyInvisibles(false);
 
+        NameTagHandler.load();
+
         Bukkit.getPluginManager().registerEvents(new NameTagHandler(), this);
         Bukkit.getPluginManager().registerEvents(new CustomHandler(), this);
 
@@ -69,9 +73,6 @@ public final class PlayerNameTags extends JavaPlugin {
         getCommand("lockchat").setExecutor(new LockChatCommand());
         getCommand("unlockchat").setExecutor(new UnlockChatCommand());
         getCommand("gamemaster").setExecutor(new GameMasterCommand());
-
-        ConfigHandler.load();
-        NameTagHandler.load();
 
         consoleInfo("Loaded successfully.");
     }
@@ -92,13 +93,14 @@ public final class PlayerNameTags extends JavaPlugin {
         if (names.getInt("version") == NAMEFILEVERSION) return;
         names.set("version", NAMEFILEVERSION);
 
-        names.getValues(false).forEach((path, value) -> {
+        names.getValues(false).forEach((path, v) -> {
             try {UUID.fromString(path);}
             catch (IllegalArgumentException e) {return;}
 
-            names.set(path + ".prefix", "");
-            names.set(path + ".name", value instanceof String ? value : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");
-            names.set(path + ".suffix", "");
+            if (!names.contains(path + ".prefix") || !NameTagCommand.textIsValid(names.getString(path + ".prefix"), TextType.PREFIX)) names.set(path + ".prefix", "");
+            if (!names.contains(path + ".name") || !NameTagCommand.textIsValid(names.getString(path + ".name"), TextType.NAME)) {names.set(path + ".name", NameTagCommand.textIsValid(names.getString(path), TextType.NAME) ? names.getString(path) : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
+            if (!names.contains(path + ".suffix") || !NameTagCommand.textIsValid(names.getString(path + ".suffix"), TextType.SUFFIX)) names.set(path + ".suffix", "");
+            if (!names.contains(path + ".hidden") || !(names.get(path + ".hidden") instanceof Boolean)) names.set(path + ".hidden", false);
         });
 
         try {names.save(NAMEFILE);} catch (IOException e) {
