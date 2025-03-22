@@ -1,6 +1,5 @@
 package me.gonkas.playernametags.commands;
 
-import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
 import me.gonkas.playernametags.util.Strings;
@@ -14,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 
 public class GameMasterCommand implements CommandExecutor, TabCompleter {
 

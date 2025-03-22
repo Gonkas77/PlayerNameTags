@@ -9,8 +9,9 @@ import org.jetbrains.annotations.NotNull;
 public class UnlockChatCommand implements CommandExecutor {
 
     @Override
-    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
         CustomHandler.unlockChat();
+        sender.sendMessage("§aChat is now unlocked. Everyone can see and use chat.");
         return true;
     }
 }

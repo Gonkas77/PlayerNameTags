@@ -9,8 +9,9 @@ import org.jetbrains.annotations.NotNull;
 public class LockChatCommand implements CommandExecutor {
 
     @Override
-    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] strings) {
         CustomHandler.lockChat();
+        sender.sendMessage("§aChat is now locked. Only Game Masters and Server Operators can see and use chat.");
         return true;
     }
 }

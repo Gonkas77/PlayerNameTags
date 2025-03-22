@@ -19,9 +19,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.UUID;
 
 public final class PlayerNameTags extends JavaPlugin {
+
+    public static PlayerNameTags INSTANCE;
+    public static boolean PLUGINISLOADED = false;
 
     public static ConsoleCommandSender CONSOLE;
     private static final String PLUGINPREFIX = "[PlayerNameTags/";
@@ -42,15 +46,32 @@ public final class PlayerNameTags extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        INSTANCE = this;
 
         saveDefaultConfig();
         reloadConfig();
+        CONFIG = getConfig();
 
         if (!PLUGINFOLDER.exists()) {PLUGINFOLDER.mkdir();}
         if (!BACKUPSFOLDER.exists()) {BACKUPSFOLDER.mkdir();}
 
-        CONFIG = getConfig();
         CONSOLE = Bukkit.getConsoleSender();
+        getCommand("config").setExecutor(new ConfigCommand());
+        getCommand("nametag").setExecutor(new NameTagCommand());
+        getCommand("lockchat").setExecutor(new LockChatCommand());
+        getCommand("unlockchat").setExecutor(new UnlockChatCommand());
+        getCommand("gamemaster").setExecutor(new GameMasterCommand());
+
+        if (!CONFIG.getBoolean("enable-plugin")) {consoleError("Plugin is disabled! Use '/config enable-plugin true' to enable the plugin!"); return;}
+
+        load();
+    }
+
+    public static void load() {
+        if (PLUGINISLOADED) return;
+
+        consoleInfo("Loading plugin...");
+
         ConfigHandler.load();
 
         NAMEFILE = new File(PLUGINFOLDER, "player_names.yml");
@@ -62,24 +83,23 @@ public final class PlayerNameTags extends JavaPlugin {
 
         TEAM = MAINSCOREBOARD.getTeam("PlayerNameTags");
         if (TEAM == null) {TEAM = MAINSCOREBOARD.registerNewTeam("PlayerNameTags");}
+        Bukkit.getOnlinePlayers().forEach(p -> TEAM.addPlayer(p));
         TEAM.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
         TEAM.setCanSeeFriendlyInvisibles(false);
 
         NameTagHandler.load();
 
-        Bukkit.getPluginManager().registerEvents(new NameTagHandler(), this);
-        Bukkit.getPluginManager().registerEvents(new CustomHandler(), this);
-
-        getCommand("nametag").setExecutor(new NameTagCommand());
-        getCommand("lockchat").setExecutor(new LockChatCommand());
-        getCommand("unlockchat").setExecutor(new UnlockChatCommand());
-        getCommand("gamemaster").setExecutor(new GameMasterCommand());
+        Bukkit.getPluginManager().registerEvents(new NameTagHandler(), INSTANCE);
+        Bukkit.getPluginManager().registerEvents(new CustomHandler(), INSTANCE);
 
         consoleInfo("Loaded successfully.");
+        PLUGINISLOADED = true;
     }
 
     @Override
     public void onDisable() {
+        if (!PLUGINISLOADED) return;
+
         NameTagHandler.unload();
         ConfigHandler.unload();
         saveConfig();
@@ -107,7 +127,8 @@ public final class PlayerNameTags extends JavaPlugin {
         try {names.save(NAMEFILE);} catch (IOException e) {
             consoleError("Unable to update name file. Creating backup...");
 
-            try {Files.copy(namefile.toPath(), (new File(BACKUPSFOLDER, "old_namefile").toPath()), StandardCopyOption.REPLACE_EXISTING);}
+            String filename = "namefile_" + Instant.now().toString().replace('T', '_').split("\\.")[0].replaceAll(":", ".");
+            try {Files.copy(namefile.toPath(), (new File(BACKUPSFOLDER, filename).toPath()), StandardCopyOption.REPLACE_EXISTING);}
             catch (IOException ex) {consoleError("Unable to create backup! Cancelling name file update. Please update manually or delete the file."); return;}
 
             consoleInfo("Created backup successfully. Deleting name file...");

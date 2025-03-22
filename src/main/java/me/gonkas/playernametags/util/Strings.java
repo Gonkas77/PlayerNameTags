@@ -1,6 +1,5 @@
 package me.gonkas.playernametags.util;
 
-import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -24,7 +23,7 @@ public class Strings {
 
         // Essentially replaces the '§' character for Minecraft message/name formatting with the '&' character. See 'https://minecraft.wiki/w/Formatting_codes' for more info.
         // Users can still put '&' in their name by adding a backslash '\' before the '&' character.
-        String format_chars = "0123456789abcdefklmnor";
+        String format_chars = ConfigHandler.getFormattingCharacters();
         int text_length = text.length();
 
         for (int i = 0; i < text.length(); i++) {

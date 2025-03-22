@@ -1,5 +1,8 @@
-# All possible characters to be used in names (including uppercase)
-valid-name-characters: "abcdefghijklmnopqrstuvwxyz1234567890.-_ "
+# If set to false, plugin will still be toggleable using '/config enable-plugin true'.
+enable-plugin: true
+
+# All possible characters to be used in names
+valid-name-characters: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ "
 
 # Maximum length for names
 max-name-length: 16
@@ -13,5 +16,8 @@ max-suffix-length: 8
 # Whether colors are enabled or not
 enable-colors: true
 
+# Whether bold, italic, strikethrough, underlined, and obfuscated texts are enabled or not
+enable-formatting: true
+
 # Game masters
-game-masters:
+game-masters: []

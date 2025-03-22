@@ -1,6 +1,5 @@
 package me.gonkas.playernametags.handlers;
 
-import me.gonkas.playernametags.PlayerNameTags;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -19,6 +18,7 @@ public class ConfigHandler {
     private static int MAXPREFIXLENGTH;
     private static int MAXSUFFIXLENGTH;
     private static boolean ALLOWCOLORS;
+    private static boolean ALLOWFORMATTING;
     private static ArrayList<OfflinePlayer> GAMEMASTERS;
 
     private static final String VALIDCHARSPATH = "valid-name-characters";
@@ -26,14 +26,16 @@ public class ConfigHandler {
     private static final String MAXPREFIXLENGTHPATH = "max-prefix-length";
     private static final String MAXSUFFIXLENGTHPATH = "max-suffix-length";
     private static final String ALLOWCOLORSPATH = "enable-colors";
+    private static final String ALLOWFORMATTINGPATH = "enable-formatting";
     private static final String GAMEMASTERSPATH = "game-masters";
 
-    private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyz1234567890.-_ ";
+    private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ ";
     private static final int DEFAULTNAMELENGTH = 16;
     private static final int DEFAULTPREFIXLENGTH = 8;
     private static final int DEFAULTSUFFIXLENGTH = 8;
     private static final boolean DEFAULTALLOWCOLORS = true;
-    private static final ArrayList<String> DEFAULTGMS = new ArrayList<>(List.of("44e86468-37f4-4b17-b2e2-b2368bb24a93"));
+    private static final boolean DEFAULTALLOWFORMATTING = true;
+    private static final ArrayList<String> DEFAULTGMS = new ArrayList<>();
 
     public static void load() {
         fixConfigPaths(CONFIG);
@@ -43,6 +45,7 @@ public class ConfigHandler {
         MAXPREFIXLENGTH = CONFIG.getInt(MAXPREFIXLENGTHPATH);
         MAXSUFFIXLENGTH = CONFIG.getInt(MAXSUFFIXLENGTHPATH);
         ALLOWCOLORS = CONFIG.getBoolean(ALLOWCOLORSPATH);
+        ALLOWFORMATTING = CONFIG.getBoolean(ALLOWFORMATTINGPATH);
         GAMEMASTERS = new ArrayList<>(CONFIG.getStringList(GAMEMASTERSPATH).stream().map(e -> Bukkit.getOfflinePlayer(UUID.fromString(e))).toList());
     }
     
@@ -52,17 +55,19 @@ public class ConfigHandler {
         CONFIG.set(MAXPREFIXLENGTHPATH, MAXPREFIXLENGTH);
         CONFIG.set(MAXSUFFIXLENGTHPATH, MAXSUFFIXLENGTH);
         CONFIG.set(ALLOWCOLORSPATH, ALLOWCOLORS);
+        CONFIG.set(ALLOWFORMATTINGPATH, ALLOWFORMATTING);
         CONFIG.set(GAMEMASTERSPATH, GAMEMASTERS.stream().map(e -> e.getUniqueId().toString()).toList());
     }
 
     // Fixes any used config paths that are broken or missing.
     private static void fixConfigPaths(FileConfiguration config) {
-        if (pathIsString(config, VALIDCHARSPATH)) config.set(VALIDCHARSPATH, DEFAULTCHARS);
-        if (pathIsInteger(config, MAXNAMELENGTHPATH)) config.set(MAXNAMELENGTHPATH, DEFAULTNAMELENGTH);
-        if (pathIsInteger(config, MAXPREFIXLENGTHPATH)) config.set(MAXPREFIXLENGTHPATH, DEFAULTPREFIXLENGTH);
-        if (pathIsInteger(config, MAXSUFFIXLENGTHPATH)) config.set(MAXSUFFIXLENGTHPATH, DEFAULTSUFFIXLENGTH);
-        if (pathIsBoolean(config, ALLOWCOLORSPATH)) config.set(ALLOWCOLORSPATH, DEFAULTALLOWCOLORS);
-        if (pathIsStringList(config, GAMEMASTERSPATH)) config.set(GAMEMASTERSPATH, DEFAULTGMS);
+        if (!pathIsString(config, VALIDCHARSPATH)) config.set(VALIDCHARSPATH, DEFAULTCHARS);
+        if (!pathIsInteger(config, MAXNAMELENGTHPATH)) config.set(MAXNAMELENGTHPATH, DEFAULTNAMELENGTH);
+        if (!pathIsInteger(config, MAXPREFIXLENGTHPATH)) config.set(MAXPREFIXLENGTHPATH, DEFAULTPREFIXLENGTH);
+        if (!pathIsInteger(config, MAXSUFFIXLENGTHPATH)) config.set(MAXSUFFIXLENGTHPATH, DEFAULTSUFFIXLENGTH);
+        if (!pathIsBoolean(config, ALLOWCOLORSPATH)) config.set(ALLOWCOLORSPATH, DEFAULTALLOWCOLORS);
+        if (!pathIsBoolean(config, ALLOWFORMATTINGPATH)) config.set(ALLOWFORMATTINGPATH, DEFAULTALLOWFORMATTING);
+        if (!pathIsStringList(config, GAMEMASTERSPATH)) config.set(GAMEMASTERSPATH, DEFAULTGMS);
     }
 
     private static boolean pathIsString(FileConfiguration config, String path) {return config.contains(path) && config.get(path) instanceof String;}
@@ -72,22 +77,38 @@ public class ConfigHandler {
 
     public static String getValidChars() {return VALIDCHARS;}
     public static void setValidChars(String chars) {VALIDCHARS = chars;}
+    public static String resetValidChars() {VALIDCHARS = DEFAULTCHARS; return VALIDCHARS;}
     public static boolean hasInvalidChars(String chars) {
-        for (char c : chars.toLowerCase().toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') return true;}
+        for (char c : chars.toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') return true;}
         return false;
     }
 
     public static int getMaxNameLength() {return MAXNAMELENGTH;}
     public static void setMaxNameLength(int num) {MAXNAMELENGTH = num;}
+    public static int resetMaxNameLength() {MAXNAMELENGTH = DEFAULTNAMELENGTH; return MAXNAMELENGTH;}
 
     public static int getMaxPrefixLength() {return MAXPREFIXLENGTH;}
     public static void setMaxPrefixLength(int num) {MAXPREFIXLENGTH = num;}
+    public static int resetMaxPrefixLength() {MAXPREFIXLENGTH = DEFAULTPREFIXLENGTH; return MAXPREFIXLENGTH;}
 
     public static int getMaxSuffixLength() {return MAXSUFFIXLENGTH;}
     public static void setMaxSuffixLength(int num) {MAXSUFFIXLENGTH = num;}
+    public static int resetMaxSuffixLength() {MAXSUFFIXLENGTH = DEFAULTSUFFIXLENGTH; return MAXSUFFIXLENGTH;}
 
     public static boolean getAllowColors() {return ALLOWCOLORS;}
     public static void setAllowColors(boolean value) {ALLOWCOLORS = value;}
+    public static boolean resetAllowColors() {ALLOWCOLORS = DEFAULTALLOWCOLORS; return ALLOWCOLORS;}
+
+    public static boolean getAllowFormatting() {return ALLOWFORMATTING;}
+    public static void setAllowFormatting(boolean value) {ALLOWFORMATTING = value;}
+    public static boolean resetAllowFormatting() {ALLOWFORMATTING = DEFAULTALLOWFORMATTING; return ALLOWFORMATTING;}
+
+    public static String getFormattingCharacters() {
+        StringBuilder builder = new StringBuilder();
+        if (getAllowColors()) {builder.append("0123456789abcdef");}
+        if (getAllowFormatting()) {builder.append("klmnor");}
+        return builder.toString();
+    }
 
     public static ArrayList<OfflinePlayer> getGameMasters() {return GAMEMASTERS;}
     public static void addGameMaster(Player player) {if (!isGameMaster(player)) GAMEMASTERS.add(player);}
