@@ -79,6 +79,8 @@ public class NameTagHandler implements Listener {
         PLAYERSTANDS.get(player).remove();
         PLAYERSTANDS.remove(player);
 
+        player.playerListName(Component.text(player.getName()));
+        player.displayName(Component.text(player.getName()));
         TEAM.removePlayer(player);
 
         PlayerNameTags.consoleInfo("Deleted name tag entity for player '%s'.", player.getName());
@@ -87,7 +89,7 @@ public class NameTagHandler implements Listener {
     public static void createNameTag(Player player, String prefix, String name, String suffix, boolean isNameTagHidden) {
         if (PLAYERSTANDS.containsKey(player)) {return;}
 
-        Component nick = Component.text(prefix + " " + name + " " + suffix);
+        Component nick = Component.text(prefix + (prefix.isEmpty() ? "" : " ") + name + (suffix.isEmpty() ? "" : " ") + suffix);
 
         ArmorStand stand = player.getWorld().spawn(player.getLocation(), ArmorStand.class);
         stand.customName(nick);
@@ -113,6 +115,8 @@ public class NameTagHandler implements Listener {
     public static void updateNameTag(Player player) {
         if (!PLAYERNAMES.containsKey(player)) return;
 
+        isCompliantWithConfig()
+
         Component name = Component.text(getFullName(player));
 
         PLAYERSTANDS.get(player).customName(name);
@@ -126,6 +130,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerJoin(PlayerJoinEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
         Player player = event.getPlayer();
 
         loadPlayer(player);
@@ -134,6 +139,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerQuit(PlayerQuitEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
         Player player = event.getPlayer();
 
         if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getName(player) + "§c left the death game."));}
@@ -142,6 +148,8 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
+
         Player player = event.getPlayer();
         if (event.isCancelled() || player.isInvisible() || player.isFlying() || isNameTagHidden(player)) return;
         if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getPlayer().isSneaking());
@@ -149,6 +157,8 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onSpectatorMode(PlayerGameModeChangeEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
+
         Player player = event.getPlayer();
         if (event.isCancelled() || player.isInvisible() || isNameTagHidden(player)) return;
         if (PLAYERSTANDS.containsKey(player)) setNameVisible(player, event.getNewGameMode() != GameMode.SPECTATOR);
@@ -156,6 +166,8 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerInvis(EntityPotionEffectEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
+
         Player player = event.getEntityType() == EntityType.PLAYER ? (Player) event.getEntity() : null;
         if (player == null) return;
 
@@ -167,6 +179,8 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerDeath(PlayerDeathEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
+
         Player player = event.getPlayer();
 
         if (event.deathMessage() != null) {event.deathMessage(Component.text("§4" + getName(player) + "§4 died in the death game."));}
@@ -176,6 +190,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerRespawn(PlayerRespawnEvent event) {
+        if (!PlayerNameTags.PLUGINISLOADED) return;
         event.getPlayer().addPassenger(PLAYERSTANDS.get(event.getPlayer()));
     }
 

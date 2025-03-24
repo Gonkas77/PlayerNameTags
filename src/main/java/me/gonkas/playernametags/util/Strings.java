@@ -18,8 +18,8 @@ public class Strings {
     // Same as matchOnlinePlayersName() but it filters the player list using param 'filter'.
     public static List<String> matchOnlinePlayersName(String string, Predicate<? super Player> filter) {return Bukkit.getOnlinePlayers().stream().filter(filter).map(Player::getName).filter(p -> containsIgnoreCase(p, string)).toList();}
 
-    public static boolean textIsValid(String text, TextType type) {
-        if (text == null || text.isEmpty()) return false;
+    public static String formatText(String text, TextType type) {
+        if (text == null || text.isEmpty()) return null;
 
         // Essentially replaces the '§' character for Minecraft message/name formatting with the '&' character. See 'https://minecraft.wiki/w/Formatting_codes' for more info.
         // Users can still put '&' in their name by adding a backslash '\' before the '&' character.
@@ -35,12 +35,12 @@ public class Strings {
             text_length -= 2;
         }
 
-        if (ConfigHandler.hasInvalidChars(text)) return false;
+        if (ConfigHandler.hasInvalidChars(text)) return null;
 
-        return switch (type) {
-            case NAME -> text_length <= ConfigHandler.getMaxNameLength();
-            case PREFIX -> text_length <= ConfigHandler.getMaxPrefixLength();
-            case SUFFIX -> text_length <= ConfigHandler.getMaxSuffixLength();
-        };
+        switch (type) {
+            case NAME -> {if (text_length > ConfigHandler.getMaxNameLength()) return null;}
+            case PREFIX -> {if (text_length > ConfigHandler.getMaxPrefixLength()) return null;}
+            case SUFFIX -> {if (text_length > ConfigHandler.getMaxSuffixLength()) return null;}
+        } return text;
     }
 }

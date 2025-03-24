@@ -6,10 +6,10 @@ main: me.gonkas.playernametags.PlayerNameTags
 api-version: '1.21'
 
 commands:
-  config:
+  pntconfig:
     description: "Allows modifications to the plugin config through the game client."
     permission: playernametags.admin
-    aliases: [playernametagsconfig, nametagconfig, pntconfig]
+    aliases: [playernametagsconfig, nametagconfig]
   nametag:
     description: "Creates a ghost entity following the player with a custom name to replace the player's name tag."
     permission: playernametags.nametag

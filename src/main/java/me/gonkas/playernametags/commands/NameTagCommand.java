@@ -1,5 +1,6 @@
 package me.gonkas.playernametags.commands;
 
+import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
 import me.gonkas.playernametags.util.Strings;
@@ -19,6 +20,8 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+
+        if (!PlayerNameTags.PLUGINISLOADED) {sender.sendMessage("§cPlugin PlayerNameTags is disabled! Enable using '/pntconfig reset enable-plugin', '/pntconfig set enable-plugin true', or '/pntconfig preset enable-plugin ENABLED'.");return true;}
 
         // Making sure a sub-command and a component from the sub-command were chosen.
         if (args.length == 0 || !SUBCOMMANDS.contains(args[0])) {sender.sendMessage("§cInvalid command usage! Use '/nametag <get|reset|set|toggle> <name|prefix|suffix>'."); return true;}
@@ -73,9 +76,9 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
 
                 StringBuilder builder = new StringBuilder(args[3]);
                 for (int i = 4; i < args.length; i++) {builder.append(" ").append(args[i]);}
-                String text = builder.toString();
+                String text = Strings.formatText(builder.toString(), text_type);
 
-                if (!Strings.textIsValid(text, text_type)) {sender.sendMessage("§cInvalid or no characters at all! Use only '" + ConfigHandler.getValidChars() + "' (uppercase included)."); return true;}
+                if (text == null) {sender.sendMessage("§cInvalid or no characters at all! Use only '" + ConfigHandler.getValidChars() + "'."); return true;}
 
                 switch (text_type) {
                     case NAME -> NameTagHandler.setName(target, text + "§r");
@@ -88,7 +91,7 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
             default -> {
 
                 NameTagHandler.toggleNameTag(target);
-                sender.sendMessage(NameTagHandler.getFullName(target) + "§a's name tag is now " + (NameTagHandler.isNameTagHidden(target) ? "hidden" : "visible") + ".");
+                sender.sendMessage("§a" + NameTagHandler.getFullName(target) + "'s name tag is now " + (NameTagHandler.isNameTagHidden(target) ? "hidden" : "visible") + ".");
 
             }
         } return true;
@@ -100,7 +103,7 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
             case 1 -> SUBCOMMANDS.stream().filter(n -> Strings.containsIgnoreCase(n, args[0])).toList();
             case 2 -> {if (args[0].equals("toggle")) yield Strings.matchOnlinePlayersName(args[1]); else yield COMPONENTS.stream().filter(n -> Strings.containsIgnoreCase(n, args[1])).toList();}
             case 3 -> Strings.matchOnlinePlayersName(args[2]);
-            case 4 -> {if (args[0].equals("set")) yield List.of("<text>");else yield List.of();}
+            case 4 -> {if (args[0].equals("set")) yield List.of("<text>"); else yield List.of();}
             default -> List.of();
         };
     }

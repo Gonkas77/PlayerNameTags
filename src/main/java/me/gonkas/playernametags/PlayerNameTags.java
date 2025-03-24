@@ -56,13 +56,13 @@ public final class PlayerNameTags extends JavaPlugin {
         if (!BACKUPSFOLDER.exists()) {BACKUPSFOLDER.mkdir();}
 
         CONSOLE = Bukkit.getConsoleSender();
-        getCommand("config").setExecutor(new ConfigCommand());
+        getCommand("pntconfig").setExecutor(new ConfigCommand());
         getCommand("nametag").setExecutor(new NameTagCommand());
         getCommand("lockchat").setExecutor(new LockChatCommand());
         getCommand("unlockchat").setExecutor(new UnlockChatCommand());
         getCommand("gamemaster").setExecutor(new GameMasterCommand());
 
-        if (!CONFIG.getBoolean("enable-plugin")) {consoleError("Plugin is disabled! Use '/config enable-plugin true' to enable the plugin!"); return;}
+        if (!CONFIG.getBoolean("enable-plugin")) {consoleError("Plugin is disabled! Use '/pntconfig enable-plugin true' to enable the plugin!"); return;}
 
         load();
     }
@@ -97,12 +97,23 @@ public final class PlayerNameTags extends JavaPlugin {
     }
 
     @Override
-    public void onDisable() {
+    public void onDisable() {unload();}
+
+    public static void unload() {
         if (!PLUGINISLOADED) return;
 
         NameTagHandler.unload();
         ConfigHandler.unload();
-        saveConfig();
+        TEAM.unregister();
+
+        INSTANCE.saveConfig();
+        PLUGINISLOADED = false;
+    }
+
+    public static void disable() {
+        consoleError("Disabling plugin! Use '/pntconfig enable-plugin true' to re-enable the plugin!");
+        CONFIG.set("enable-plugin", false);
+        unload();
     }
 
     public static void consoleError(String message, String... args) {CONSOLE.sendMessage(String.format(ERRORPREFIX + message, (Object[]) args));}
@@ -118,9 +129,9 @@ public final class PlayerNameTags extends JavaPlugin {
             try {UUID.fromString(path);}
             catch (IllegalArgumentException e) {return;}
 
-            if (!names.contains(path + ".prefix") || !Strings.textIsValid(names.getString(path + ".prefix"), TextType.PREFIX)) names.set(path + ".prefix", "");
-            if (!names.contains(path + ".name") || !Strings.textIsValid(names.getString(path + ".name"), TextType.NAME)) {names.set(path + ".name", Strings.textIsValid(names.getString(path), TextType.NAME) ? names.getString(path) : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
-            if (!names.contains(path + ".suffix") || !Strings.textIsValid(names.getString(path + ".suffix"), TextType.SUFFIX)) names.set(path + ".suffix", "");
+            if (!names.contains(path + ".prefix") || Strings.formatText(names.getString(path + ".prefix"), TextType.PREFIX) == null) names.set(path + ".prefix", "");
+            if (!names.contains(path + ".name") || Strings.formatText(names.getString(path + ".name"), TextType.NAME) == null) {names.set(path + ".name", Strings.formatText(names.getString(path), TextType.NAME) != null ? names.getString(path) : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
+            if (!names.contains(path + ".suffix") || Strings.formatText(names.getString(path + ".suffix"), TextType.SUFFIX) == null) names.set(path + ".suffix", "");
             if (!names.contains(path + ".hidden") || !(names.get(path + ".hidden") instanceof Boolean)) names.set(path + ".hidden", false);
         });
 

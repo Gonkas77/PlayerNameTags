@@ -1,5 +1,6 @@
 package me.gonkas.playernametags.commands;
 
+import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
 import me.gonkas.playernametags.util.Strings;
@@ -21,6 +22,8 @@ public class GameMasterCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+
+        if (!PlayerNameTags.PLUGINISLOADED) {sender.sendMessage("§cPlugin PlayerNameTags is disabled! Enable using '/pntconfig reset enable-plugin', '/pntconfig set enable-plugin true', or '/pntconfig preset enable-plugin ENABLED'.");return true;}
 
         if (args.length == 0 || args.length > 2) {sender.sendMessage("§cThis command requires at least 1 and at most 2 arguments!"); return true;}
         if (!SUBCOMMANDS.contains(args[0])) {sender.sendMessage("§cInvalid sub-command! Use 'add/remove/list'."); return true;}
