@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static me.gonkas.playernametags.PlayerNameTags.CONFIG;
-import static me.gonkas.playernametags.PlayerNameTags.PLUGINISLOADED;
 
 public class ConfigHandler {
 

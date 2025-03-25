@@ -1,6 +1,7 @@
 package me.gonkas.playernametags.handlers;
 
 import me.gonkas.playernametags.PlayerNameTags;
+import me.gonkas.playernametags.util.Strings;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -103,6 +104,7 @@ public class NameTagHandler implements Listener {
 
         PLAYERSTANDS.put(player, stand);
         setFullName(player, prefix, name, suffix);
+        forceConfigChanges(player);
         toggleNameTag(player, !isNameTagHidden);
 
         TEAM.addPlayer(player);
@@ -115,8 +117,7 @@ public class NameTagHandler implements Listener {
     public static void updateNameTag(Player player) {
         if (!PLAYERNAMES.containsKey(player)) return;
 
-        isCompliantWithConfig()
-
+        forceConfigChanges(player);
         Component name = Component.text(getFullName(player));
 
         PLAYERSTANDS.get(player).customName(name);
@@ -124,6 +125,17 @@ public class NameTagHandler implements Listener {
         player.displayName(name);
 
         PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), getFullName(player));
+    }
+
+    // Force Runtime Config changes onto player's name.
+    public static void forceConfigChanges(Player player) {
+        List<String> name = List.of(getPrefix(player), getName(player), getSuffix(player));
+        name.forEach(Strings::deformatText);
+
+        // Resets the player's prefix, name, or suffx if any of them contain invalid characters or exceed the maximum character limit.
+        if (Strings.textLength(name.getFirst()) > ConfigHandler.getMaxPrefixLength() || ConfigHandler.hasInvalidChars(name.getFirst())) setPrefix(player, "");
+        if (Strings.textLength(name.get(1)) > ConfigHandler.getMaxNameLength() || ConfigHandler.hasInvalidChars(name.get(1))) setName(player, player.getName());
+        if (Strings.textLength(name.getLast()) > ConfigHandler.getMaxSuffixLength() || ConfigHandler.hasInvalidChars(name.getLast())) setSuffix(player, "");
     }
 
     // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -205,11 +217,7 @@ public class NameTagHandler implements Listener {
     }
 
     public static String getName(Player player) {return hasName(player) ? PLAYERNAMES.get(player).get(1) : player.getName();}
-    public static String getTrueName(Player player) { // Returns getName() without formatting.
-        StringBuilder name = new StringBuilder(getName(player));
-        for (int i=0; i < name.length(); i++) {if (name.charAt(i) == '§') name.replace(i, i+2, "");}
-        return name.toString();
-    }
+    public static String getTrueName(Player player) {return Strings.deformatText(getName(player));}
     public static boolean hasName(Player player) {return PLAYERNAMES.containsKey(player) && !PLAYERNAMES.get(player).get(1).isEmpty();}
     public static void setName(Player player, String name) {
         if (PLAYERNAMES.containsKey(player)) PLAYERNAMES.get(player).set(1, name);

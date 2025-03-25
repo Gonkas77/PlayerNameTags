@@ -2,8 +2,10 @@ package me.gonkas.playernametags.commands;
 
 import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
+import me.gonkas.playernametags.handlers.NameTagHandler;
 import me.gonkas.playernametags.util.ConfigVarType;
 import me.gonkas.playernametags.util.Strings;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -206,7 +208,11 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
                     }
                 } sender.sendMessage("Set '" + args[1] + "' to '" + args[2] + "'.");
             }
-        } return true;
+        }
+        
+        // Force update all name tags to follow new config rules.
+        if (!args[0].equals("get")) {Bukkit.getOnlinePlayers().forEach(NameTagHandler::updateNameTag);}
+        return true;
     }
 
     @Override
