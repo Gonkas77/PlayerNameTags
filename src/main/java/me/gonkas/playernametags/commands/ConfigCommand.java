@@ -61,7 +61,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
         if (!PlayerNameTags.PLUGINISLOADED) {
             if (args[1].equals(ENABLEPLUGIN) && ((args[0].equals("preset") && args[2].equals("ENABLED")) || args[0].equals("reset") || (args[0].equals("set") && args[2].equals("true")))) {
                 sender.sendMessage("§aEnabling PlayerNameTags!");
-                PlayerNameTags.load();
+                PlayerNameTags.enable();
             } else {sender.sendMessage("§cPlugin PlayerNameTags is disabled! Enable using '/pntconfig reset enable-plugin', '/pntconfig set enable-plugin true', or '/pntconfig preset enable-plugin ENABLED'.");}
             return true;
         }
@@ -209,7 +209,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
                 } sender.sendMessage("Set '" + args[1] + "' to '" + args[2] + "'.");
             }
         }
-        
+
         // Force update all name tags to follow new config rules.
         if (!args[0].equals("get")) {Bukkit.getOnlinePlayers().forEach(NameTagHandler::updateNameTag);}
         return true;

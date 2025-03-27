@@ -1,12 +1,8 @@
 package me.gonkas.playernametags.handlers;
 
-import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.util.Strings;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
@@ -19,13 +15,16 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static me.gonkas.playernametags.PlayerNameTags.NAMEFILE;
-import static me.gonkas.playernametags.PlayerNameTags.TEAM;
+import static me.gonkas.playernametags.PlayerNameTags.*;
 
 public class NameTagHandler implements Listener {
 
@@ -37,43 +36,58 @@ public class NameTagHandler implements Listener {
     public static void unload() {Bukkit.getOnlinePlayers().forEach(NameTagHandler::unloadPlayer);}
 
     private static void loadPlayer(Player player) {
-        YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
 
-        String prefix_path = player.getUniqueId() + ".prefix";
-        String name_path = player.getUniqueId() + ".name";
-        String suffix_path = player.getUniqueId() + ".suffix";
-        String hidden_path = player.getUniqueId() + ".hidden";
+        File namefile = getNameFile(player);
+        if (namefile == null) return;
 
-        if (!names.contains(prefix_path)) {names.set(prefix_path, "");}
-        if (!names.contains(name_path)) {names.set(name_path, player.getName() + "§r");}
-        if (!names.contains(suffix_path)) {names.set(suffix_path, "");}
-        if (!names.contains(hidden_path)) {names.set(hidden_path, false);}
+        YamlConfiguration nametag = YamlConfiguration.loadConfiguration(namefile);
 
-        String prefix = names.getString(prefix_path);
-        String name = names.getString(name_path);
-        String suffix = names.getString(suffix_path);
-        boolean hidden = names.getBoolean(hidden_path);
+        if (!nametag.contains("version")) {nametag.set("version", NAMEFILEVERSION);}
+        if (!nametag.contains("prefix")) {nametag.set("prefix", "");}
+        if (!nametag.contains("name")) {nametag.set("name", player.getName() + "§r");}
+        if (!nametag.contains("suffix")) {nametag.set("suffix", "");}
+        if (!nametag.contains("hidden")) {nametag.set("hidden", false);}
 
-        if (prefix == null || name == null || suffix == null) {PlayerNameTags.consoleError("Unable to load player %s's nickname! Check the name file.", player.getName()); return;}
+        String prefix = nametag.getString("prefix");
+        String name = nametag.getString("name");
+        String suffix = nametag.getString("suffix");
+        Boolean hidden = nametag.getObject("hidden", Boolean.class);
+
+        if (prefix == null || name == null || suffix == null || hidden == null) {
+            consoleError("Unable to load player %s's namefile! Creating backup...", player.getName());
+
+            String filename = player.getUniqueId() + "_" + Instant.now().toString().split("\\.")[0].replaceAll(":", ".");
+            try {Files.copy(namefile.toPath(), (new File(BACKUPSFOLDER, filename).toPath()), StandardCopyOption.REPLACE_EXISTING);}
+            catch (IOException ex) {consoleError("Unable to create backup! Cancelling namefile load. Please create the file manually or restart the plugin."); return;}
+
+            consoleInfo("Created backup successfully. Deleting name file...");
+            if (!namefile.delete()) {consoleError("Unable to delete name file! Please delete it manually and restart the server."); return;}
+
+            consoleInfo("Successfully deleted player %s's name file. Reloading player...");
+            loadPlayer(player);
+            return;
+        }
 
         createNameTag(player, prefix, name, suffix, hidden);
-        PlayerNameTags.consoleInfo("Creating Name Tag for player '%s'.", player.getName());
+        consoleInfo("Creating Name Tag for player '%s'.", player.getName());
     }
 
     private static void unloadPlayer(Player player) {
         if (!hasName(player)) return;
-        YamlConfiguration names = YamlConfiguration.loadConfiguration(NAMEFILE);
 
-        names.set(player.getUniqueId() + ".prefix", getPrefix(player));
-        names.set(player.getUniqueId() + ".name", getName(player));
-        names.set(player.getUniqueId() + ".suffix", getSuffix(player));
-        names.set(player.getUniqueId() + ".hidden", isNameTagHidden(player));
+        File namefile = new File(NAMETAGSFOLDER, player.getUniqueId() + ".yml");
+        YamlConfiguration nametag = YamlConfiguration.loadConfiguration(namefile);
 
-        PlayerNameTags.consoleInfo("Attempting to save player name for '%s'.", player.getName());
+        nametag.set("prefix", getPrefix(player));
+        nametag.set("name", getName(player));
+        nametag.set("suffix", getSuffix(player));
+        nametag.set("hidden", isNameTagToggled(player));
 
-        try {names.save(NAMEFILE);}
-        catch (IOException e) {PlayerNameTags.consoleError("Unable to save player name file!");}
-        finally {PlayerNameTags.consoleInfo("Successfully saved player name file.");}
+        consoleInfo("Attempting to save player name for '%s'.", player.getName());
+
+        try {nametag.save(namefile);}
+        catch (IOException e) {consoleError("Unable to save player name file!");}
+        finally {consoleInfo("Successfully saved player name file.");}
 
         PLAYERNAMES.remove(player);
         PLAYERNAMESTOGGLE.remove(player);
@@ -84,7 +98,7 @@ public class NameTagHandler implements Listener {
         player.displayName(Component.text(player.getName()));
         TEAM.removePlayer(player);
 
-        PlayerNameTags.consoleInfo("Deleted name tag entity for player '%s'.", player.getName());
+        consoleInfo("Deleted name tag entity for player '%s'.", player.getName());
     }
 
     public static void createNameTag(Player player, String prefix, String name, String suffix, boolean isNameTagHidden) {
@@ -100,7 +114,7 @@ public class NameTagHandler implements Listener {
 
         stand.getAttribute(Attribute.SCALE).setBaseValue(0.0625);
 
-        if (!player.addPassenger(stand)) {PlayerNameTags.consoleWarn("Unable to anchor armor stand onto player '%s'.", player.getName());}
+        if (!player.addPassenger(stand)) {consoleWarn("Unable to anchor armor stand onto player '%s'.", player.getName());}
 
         PLAYERSTANDS.put(player, stand);
         setFullName(player, prefix, name, suffix);
@@ -111,7 +125,7 @@ public class NameTagHandler implements Listener {
         player.playerListName(nick);
         player.displayName(nick);
 
-        PlayerNameTags.consoleInfo("Successfully created Name Tag '%s§r' for player '%s'.", name, player.getName());
+        consoleInfo("Successfully created Name Tag '%s§r' for player '%s'.", name, player.getName());
     }
 
     public static void updateNameTag(Player player) {
@@ -124,7 +138,7 @@ public class NameTagHandler implements Listener {
         player.playerListName(name);
         player.displayName(name);
 
-        PlayerNameTags.consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), getFullName(player));
+        consoleInfo("Updated name tag for player '%s' to '%s§r'.", player.getName(), getFullName(player));
     }
 
     // Force Runtime Config changes onto player's name.
@@ -142,7 +156,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerJoin(PlayerJoinEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
         Player player = event.getPlayer();
 
         loadPlayer(player);
@@ -151,7 +165,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerQuit(PlayerQuitEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
         Player player = event.getPlayer();
 
         if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getName(player) + "§c left the death game."));}
@@ -160,30 +174,30 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerCrouch(PlayerToggleSneakEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
 
         Player player = event.getPlayer();
-        if (event.isCancelled() || player.isInvisible() || player.isFlying() || isNameTagHidden(player)) return;
+        if (event.isCancelled() || player.isInvisible() || player.isFlying() || isNameTagToggled(player)) return;
         if (PLAYERSTANDS.containsKey(event.getPlayer())) setNameVisible(event.getPlayer(), event.getPlayer().isSneaking());
     }
 
     @EventHandler
     public static void onSpectatorMode(PlayerGameModeChangeEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
 
         Player player = event.getPlayer();
-        if (event.isCancelled() || player.isInvisible() || isNameTagHidden(player)) return;
+        if (event.isCancelled() || player.isInvisible() || isNameTagToggled(player)) return;
         if (PLAYERSTANDS.containsKey(player)) setNameVisible(player, event.getNewGameMode() != GameMode.SPECTATOR);
     }
 
     @EventHandler
     public static void onPlayerInvis(EntityPotionEffectEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
 
         Player player = event.getEntityType() == EntityType.PLAYER ? (Player) event.getEntity() : null;
         if (player == null) return;
 
-        if (!PLAYERSTANDS.containsKey(player) || event.getModifiedType() != PotionEffectType.INVISIBILITY || isNameTagHidden(player)) return;
+        if (!PLAYERSTANDS.containsKey(player) || event.getModifiedType() != PotionEffectType.INVISIBILITY || isNameTagToggled(player)) return;
 
         if (event.getAction() == EntityPotionEffectEvent.Action.ADDED) setNameVisible((Player) event.getEntity(), false);
         else if (event.getAction() != EntityPotionEffectEvent.Action.CHANGED) setNameVisible((Player) event.getEntity(), true);
@@ -191,7 +205,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerDeath(PlayerDeathEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
 
         Player player = event.getPlayer();
 
@@ -202,7 +216,7 @@ public class NameTagHandler implements Listener {
 
     @EventHandler
     public static void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (!PlayerNameTags.PLUGINISLOADED) return;
+        if (!PLUGINISLOADED) return;
         event.getPlayer().addPassenger(PLAYERSTANDS.get(event.getPlayer()));
     }
 
@@ -244,10 +258,64 @@ public class NameTagHandler implements Listener {
     public static boolean isNameVisible(Player player) {return PLAYERSTANDS.containsKey(player) ? PLAYERSTANDS.get(player).isCustomNameVisible() : player.isInvisible();}
     public static void setNameVisible(Player player, boolean bool) {if (PLAYERSTANDS.containsKey(player)) PLAYERSTANDS.get(player).setCustomNameVisible(bool);}
 
-    public static boolean isNameTagHidden(Player player) {return PLAYERNAMESTOGGLE.containsKey(player) && !PLAYERNAMESTOGGLE.get(player);}
+    public static boolean isNameTagToggled(Player player) {return PLAYERNAMESTOGGLE.containsKey(player) && !PLAYERNAMESTOGGLE.get(player);}
     public static void toggleNameTag(Player player, boolean bool) {
         if (PLAYERNAMESTOGGLE.containsKey(player)) {PLAYERNAMESTOGGLE.replace(player, bool); setNameVisible(player, bool);}
         else {PLAYERNAMESTOGGLE.put(player, bool); setNameVisible(player, bool);}
     }
     public static void toggleNameTag(Player player) {toggleNameTag(player, !PLAYERNAMESTOGGLE.get(player));}
+
+    // ----------------------------------------------------------------------------------------------------------------------------------------------
+
+    public static File getNameFile(OfflinePlayer player) {
+        File file = new File(NAMETAGSFOLDER, player.getUniqueId() + ".yml");
+        if (!file.exists()) try {
+            file.createNewFile();
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            config.set("prefix", "");
+            config.set("name", player.getName() + "§r");
+            config.set("suffix", "");
+            config.set("hidden", false);
+            try {config.save(file);} catch (IOException e) {consoleError("Unable to create player %s's namefile!", player.getName()); return null;}
+        } catch (IOException e) {consoleError("Unable to create player %s's namefile!", player.getName()); return null;}
+        return file;
+    }
+    public static boolean hasNameFile(OfflinePlayer player) {return (new File(NAMETAGSFOLDER, player.getUniqueId() + ".yml")).exists();}
+
+    public static YamlConfiguration getNameTagConfig(OfflinePlayer player) {return YamlConfiguration.loadConfiguration(getNameFile(player));}
+    public static void saveNameTagConfig(OfflinePlayer player, YamlConfiguration config) {
+        try {config.save(getNameFile(player));} catch (IOException e) {consoleError("Unable to save player %s's namefile!", player.getName());}
+    }
+
+    public static String getPrefix(OfflinePlayer player) {return hasNameFile(player) ? getNameTagConfig(player).getString("prefix") : "";}
+    public static String getName(OfflinePlayer player) {return hasNameFile(player) ? getNameTagConfig(player).getString("name") : player.getName();}
+    public static String getSuffix(OfflinePlayer player) {return hasNameFile(player) ? getNameTagConfig(player).getString("suffix") : "";}
+    public static boolean isHidden(OfflinePlayer player) {return hasNameFile(player) && getNameTagConfig(player).getBoolean("hidden");}
+
+    public static boolean hasPrefix(OfflinePlayer player) {return getPrefix(player).isEmpty();}
+    public static boolean hasName(OfflinePlayer player) {return getName(player).equals(player.getName());}
+    public static boolean hasSuffix(OfflinePlayer player) {return getSuffix(player).isEmpty();}
+
+    public static void setPrefix(OfflinePlayer player, String prefix) {
+        YamlConfiguration config = getNameTagConfig(player);
+        config.set("prefix", prefix);
+        saveNameTagConfig(player, config);
+    }
+    public static void setName(OfflinePlayer player, String name) {
+        YamlConfiguration config = getNameTagConfig(player);
+        config.set("name", name);
+        saveNameTagConfig(player, config);
+    }
+    public static void setSuffix(OfflinePlayer player, String suffix) {
+        YamlConfiguration config = getNameTagConfig(player);
+        config.set("suffix", suffix);
+        saveNameTagConfig(player, config);
+    }
+    public static void setHidden(OfflinePlayer player, boolean hidden) {
+        YamlConfiguration config = getNameTagConfig(player);
+        config.set("hidden", hidden);
+        saveNameTagConfig(player, config);
+    }
+
+    public static String getFullName(OfflinePlayer player) {return (hasPrefix(player) ? getPrefix(player) + " " : "") + getName(player) + (hasSuffix(player) ? " " + getSuffix(player) : "");}
 }

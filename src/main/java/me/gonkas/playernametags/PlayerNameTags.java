@@ -35,10 +35,10 @@ public final class PlayerNameTags extends JavaPlugin {
 
     public static File PLUGINFOLDER = new File("plugins/PlayerNameTags");
     public static File BACKUPSFOLDER = new File(PLUGINFOLDER, "backups");
+    public static File NAMETAGSFOLDER = new File(PLUGINFOLDER, "nametags");
 
     public static FileConfiguration CONFIG;
-    public static File NAMEFILE;
-    private static final int NAMEFILEVERSION = 2;
+    public static final int NAMEFILEVERSION = 1;
 
     public static ScoreboardManager SCOREBOARDMANAGER;
     public static Scoreboard MAINSCOREBOARD;
@@ -52,18 +52,19 @@ public final class PlayerNameTags extends JavaPlugin {
         reloadConfig();
         CONFIG = getConfig();
 
+        CONSOLE = Bukkit.getConsoleSender();
+
         if (!PLUGINFOLDER.exists()) {PLUGINFOLDER.mkdir();}
         if (!BACKUPSFOLDER.exists()) {BACKUPSFOLDER.mkdir();}
+        if (!NAMETAGSFOLDER.exists()) {NAMETAGSFOLDER.mkdir();}
 
-        CONSOLE = Bukkit.getConsoleSender();
         getCommand("pntconfig").setExecutor(new ConfigCommand());
         getCommand("nametag").setExecutor(new NameTagCommand());
         getCommand("lockchat").setExecutor(new LockChatCommand());
         getCommand("unlockchat").setExecutor(new UnlockChatCommand());
         getCommand("gamemaster").setExecutor(new GameMasterCommand());
 
-        if (!CONFIG.getBoolean("enable-plugin")) {consoleError("Plugin is disabled! Use '/pntconfig enable-plugin true' to enable the plugin!"); return;}
-
+        if (!CONFIG.getBoolean("enable-plugin")) {consoleError("Plugin is disabled! Use '/pntconfig set enable-plugin true' to enable the plugin!"); return;}
         load();
     }
 
@@ -73,10 +74,7 @@ public final class PlayerNameTags extends JavaPlugin {
         consoleInfo("Loading plugin...");
 
         ConfigHandler.load();
-
-        NAMEFILE = new File(PLUGINFOLDER, "player_names.yml");
-        try {NAMEFILE.createNewFile();} catch (IOException e) {consoleError("Unable to create player name file."); throw new RuntimeException(e);}
-        updateNameFileVersion(NAMEFILE);
+        updateNameFileSystem();
 
         SCOREBOARDMANAGER = Bukkit.getScoreboardManager();
         MAINSCOREBOARD = SCOREBOARDMANAGER.getMainScoreboard();
@@ -110,6 +108,12 @@ public final class PlayerNameTags extends JavaPlugin {
         PLUGINISLOADED = false;
     }
 
+    public static void enable() {
+        CONFIG.set("enable-plugin", true);
+        INSTANCE.saveConfig();
+        load();
+    }
+
     public static void disable() {
         consoleError("Disabling plugin! Use '/pntconfig enable-plugin true' to re-enable the plugin!");
         CONFIG.set("enable-plugin", false);
@@ -120,33 +124,49 @@ public final class PlayerNameTags extends JavaPlugin {
     public static void consoleInfo(String message, String... args) {CONSOLE.sendMessage(String.format(INFOPREFIX + message, (Object[]) args));}
     public static void consoleWarn(String message, String... args) {CONSOLE.sendMessage(String.format(WARNPREFIX + message, (Object[]) args));}
 
-    private static void updateNameFileVersion(File namefile) {
-        YamlConfiguration names = YamlConfiguration.loadConfiguration(namefile);
-        if (names.getInt("version") == NAMEFILEVERSION) return;
-        names.set("version", NAMEFILEVERSION);
+    private static boolean requestNamefileBackup = false;
+    private static void updateNameFileSystem() {
+        File old_namefile = new File(PLUGINFOLDER, "player_names.yml");
+        if (!old_namefile.exists()) return;
 
-        names.getValues(false).forEach((path, v) -> {
-            try {UUID.fromString(path);}
-            catch (IllegalArgumentException e) {return;}
+        consoleWarn("Old namefile detected! Updating to new nametag file system...");
+        YamlConfiguration nametags = YamlConfiguration.loadConfiguration(old_namefile);
 
-            if (!names.contains(path + ".prefix") || Strings.formatText(names.getString(path + ".prefix"), TextType.PREFIX) == null) names.set(path + ".prefix", "");
-            if (!names.contains(path + ".name") || Strings.formatText(names.getString(path + ".name"), TextType.NAME) == null) {names.set(path + ".name", Strings.formatText(names.getString(path), TextType.NAME) != null ? names.getString(path) : Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
-            if (!names.contains(path + ".suffix") || Strings.formatText(names.getString(path + ".suffix"), TextType.SUFFIX) == null) names.set(path + ".suffix", "");
-            if (!names.contains(path + ".hidden") || !(names.get(path + ".hidden") instanceof Boolean)) names.set(path + ".hidden", false);
+        nametags.getValues(false).forEach((path, value) -> {
+            try {UUID.fromString(path);} catch (IllegalArgumentException e) {return;}
+
+            File new_namefile = new File(NAMETAGSFOLDER, path + ".yml");
+            YamlConfiguration nametag = YamlConfiguration.loadConfiguration(new_namefile);
+
+            if (!nametags.contains(path + ".prefix") || Strings.formatText(nametags.getString(path + ".prefix"), TextType.PREFIX) == null) {nametag.set("prefix", "");}
+            else {nametag.set("prefix", nametags.getString(path + ".prefix"));}
+
+            if (!nametags.contains(path + ".name") || Strings.formatText(nametags.getString(path + ".name"), TextType.NAME) == null) {nametag.set("name", Bukkit.getOfflinePlayer(UUID.fromString(path)).getName() + "§r");}
+            else {nametag.set("name", nametags.getString(path + ".name"));}
+
+            if (!nametags.contains(path + ".suffix") || Strings.formatText(nametags.getString(path + ".suffix"), TextType.SUFFIX) == null) {nametag.set("suffix", "");}
+            else {nametag.set("suffix", nametags.getString(path + ".suffix"));}
+
+            if (!nametags.contains(path + ".hidden") || !(nametags.get(path + ".hidden") instanceof Boolean)) {nametag.set("hidden", false);}
+            else {nametag.set("hidden", nametags.getBoolean(path + ".hidden"));}
+
+            try {nametag.save(new_namefile);} catch (IOException ignored) {requestNamefileBackup = true;}
         });
 
-        try {names.save(NAMEFILE);} catch (IOException e) {
-            consoleError("Unable to update name file. Creating backup...");
+        if (requestNamefileBackup) {
+            consoleError("Some nametags were not updated properly! Creating old system backup...");
 
-            String filename = "namefile_" + Instant.now().toString().replace('T', '_').split("\\.")[0].replaceAll(":", ".");
-            try {Files.copy(namefile.toPath(), (new File(BACKUPSFOLDER, filename).toPath()), StandardCopyOption.REPLACE_EXISTING);}
-            catch (IOException ex) {consoleError("Unable to create backup! Cancelling name file update. Please update manually or delete the file."); return;}
+            File namefile_backups_folder = new File(BACKUPSFOLDER, "old_namefiles");
+            if (!namefile_backups_folder.exists()) {namefile_backups_folder.mkdir();}
 
-            consoleInfo("Created backup successfully. Deleting name file...");
-            if (!NAMEFILE.delete()) {consoleError("Unable to delete name file! Please delete it manually and restart the server."); return;}
+            String filename = "namefile_" + Instant.now().toString().split("\\.")[0].replaceAll(":", ".");
+            try {Files.copy(old_namefile.toPath(), (new File(namefile_backups_folder, filename).toPath()), StandardCopyOption.REPLACE_EXISTING);}
+            catch (IOException ex) {consoleError("Unable to create backup! Cancelling namefile deletion. Please update manually or delete the file."); return;}
 
-            consoleInfo("Successfully deleted name file. Reloading the server...");
-            Bukkit.reload();
-       }
+            consoleWarn("Created backup successfully. Deleting old namefile...");
+        }
+
+        if (!old_namefile.delete()) {consoleError("Unable to delete old namefile! Please delete it manually.");}
+        else {consoleInfo("Successfully deleted old namefile");}
     }
 }
