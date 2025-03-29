@@ -36,15 +36,12 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
         if (args[0].equals("toggle")) {arg_count = 1;}
 
         // Getting the player target
-        OfflinePlayer target;
+        Player target;
         if (args.length == arg_count) {
             if (sender instanceof ConsoleCommandSender) {sender.sendMessage("§cConsole can not be a player target! Use '/nametag " + args[0] + " " + args[1] + "<player>'."); return true;}
             if (args[0].equals("set")) {sender.sendMessage("§cThis sub-command requires a player argument! Use '/nametag set " + args[1] + " <player> <text>'."); return true;}
             target = (Player) sender;
-        } else {
-            target = Bukkit.getPlayerExact(args[arg_count]);
-            if (target == null) {target = Bukkit.getOfflinePlayer(args[arg_count]);}
-        }
+        } else {target = Bukkit.getPlayerExact(args[arg_count]);}
 
         TextType text_type = null;
         if (!args[0].equals("toggle")) {text_type = TextType.valueOf(args[1].toUpperCase());}
@@ -53,17 +50,20 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
         switch (args[0]) {
             case "get" -> {
 
+                OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(args[2]);
+                if (target == null && player == null) {sender.sendMessage("§cPlayer is offline and not cached!"); return true;}
+
                 String toGet = switch (text_type) {
-                    case NAME -> {if (target instanceof Player) yield NameTagHandler.getName(target.getPlayer());else yield NameTagHandler.getName(target);}
-                    case PREFIX -> {if (target instanceof Player) yield NameTagHandler.getPrefix(target.getPlayer());else yield NameTagHandler.getPrefix(target);}
-                    case SUFFIX -> {if (target instanceof Player) yield NameTagHandler.getSuffix(target.getPlayer());else yield NameTagHandler.getSuffix(target);}
+                    case NAME -> {if (target != null) yield NameTagHandler.getName(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.NAME);}
+                    case PREFIX -> {if (target != null) yield NameTagHandler.getPrefix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.PREFIX);}
+                    case SUFFIX -> {if (target != null) yield NameTagHandler.getSuffix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.SUFFIX);}
                 };
 
-                sender.sendMessage("§aPlayer " + target.getName() + "'s " + args[1] + " is " + toGet + ".");
+                sender.sendMessage("§aPlayer " + (target != null ? target.getName() : args[2]) + "'s " + args[1] + " is " + toGet + ".");
             }
             case "reset" -> {
 
-                if (target instanceof Player) {
+                if (target != null) {
                     switch (text_type) {
                         case NAME -> NameTagHandler.setName(target.getPlayer(), target.getName());
                         case PREFIX -> NameTagHandler.setPrefix(target.getPlayer(), "");
@@ -71,17 +71,17 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
                     }
                 } else {
                     switch (text_type) {
-                        case NAME -> NameTagHandler.setName(target, target.getName());
-                        case PREFIX -> NameTagHandler.setPrefix(target, "");
-                        case SUFFIX -> NameTagHandler.setSuffix(target, "");
+                        case NAME -> NameTagHandler.setName(args[2], args[2]);
+                        case PREFIX -> NameTagHandler.setPrefix(args[2], "");
+                        case SUFFIX -> NameTagHandler.setSuffix(args[2], "");
                     }
                 }
 
-                sender.sendMessage("Reset player " + target.getName() + "'s " + args[1] + ".");
+                sender.sendMessage("Reset player " + (target != null ? target.getName() : args[2]) + "'s " + args[1] + ".");
             }
             case "set" -> {
 
-                if (args.length == 3) {sender.sendMessage("§cInvalid text argument! Use '/nametag set " + args[1] + " " + target.getName() + " <text>'."); return true;}
+                if (args.length == 3) {sender.sendMessage("§cInvalid text argument! Use '/nametag set " + args[1] + " " + (target != null ? target.getName() : args[2]) + " <text>'."); return true;}
 
                 StringBuilder builder = new StringBuilder(args[3]);
                 for (int i = 4; i < args.length; i++) {builder.append(" ").append(args[i]);}
@@ -89,7 +89,7 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
 
                 if (text == null) {sender.sendMessage("§cInvalid or no characters at all! Use only '" + ConfigHandler.getValidChars() + "'."); return true;}
 
-                if (target instanceof Player) {
+                if (target != null) {
                     switch (text_type) {
                         case NAME -> NameTagHandler.setName(target.getPlayer(), text + "§r");
                         case PREFIX -> NameTagHandler.setPrefix(target.getPlayer(), text + "§r");
@@ -97,22 +97,22 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
                     }
                 } else {
                     switch (text_type) {
-                        case NAME -> NameTagHandler.setName(target, text + "§r");
-                        case PREFIX -> NameTagHandler.setPrefix(target, text + "§r");
-                        case SUFFIX -> NameTagHandler.setSuffix(target, text + "§r");
+                        case NAME -> NameTagHandler.setName(args[2], text + "§r");
+                        case PREFIX -> NameTagHandler.setPrefix(args[2], text + "§r");
+                        case SUFFIX -> NameTagHandler.setSuffix(args[2], text + "§r");
                     }
                 }
 
-                sender.sendMessage("Set player " + target.getName() + "'s " + args[1] + " to " + text + "§r.");
+                sender.sendMessage("Set player " + (target != null ? target.getName() : args[2]) + "'s " + args[1] + " to " + text + "§r.");
             }
             default -> {
 
-                if (target instanceof Player) {
+                if (target != null) {
                     NameTagHandler.toggleNameTag(target.getPlayer());
                     sender.sendMessage("§a" + NameTagHandler.getFullName(target.getPlayer()) + "'s name tag is now " + (NameTagHandler.isNameTagToggled(target.getPlayer()) ? "hidden" : "visible") + ".");
                 } else {
-                    NameTagHandler.setHidden(target, !NameTagHandler.isHidden(target));
-                    sender.sendMessage("§a" + NameTagHandler.getFullName(target) + "'s name tag will be " + (NameTagHandler.isHidden(target) ? "hidden" : "visible") + " upon login.");
+                    NameTagHandler.setHidden(args[1], !NameTagHandler.isHidden(args[1]));
+                    sender.sendMessage("§a" + NameTagHandler.getFullName(args[1]) + "'s name tag will be " + (NameTagHandler.isHidden(args[1]) ? "hidden" : "visible") + " upon login.");
                 }
             }
         } return true;

@@ -132,6 +132,8 @@ public final class PlayerNameTags extends JavaPlugin {
         consoleWarn("Old namefile detected! Updating to new nametag file system...");
         YamlConfiguration nametags = YamlConfiguration.loadConfiguration(old_namefile);
 
+        Bukkit.getServer().
+
         nametags.getValues(false).forEach((path, value) -> {
             try {UUID.fromString(path);} catch (IllegalArgumentException e) {return;}
 
@@ -159,7 +161,7 @@ public final class PlayerNameTags extends JavaPlugin {
             File namefile_backups_folder = new File(BACKUPSFOLDER, "old_namefiles");
             if (!namefile_backups_folder.exists()) {namefile_backups_folder.mkdir();}
 
-            String filename = "namefile_" + Instant.now().toString().split("\\.")[0].replaceAll(":", ".");
+            String filename = "namefile_" + Instant.now().toString().split("\\.")[0].replaceAll(":", ".") + ".yml";
             try {Files.copy(old_namefile.toPath(), (new File(namefile_backups_folder, filename).toPath()), StandardCopyOption.REPLACE_EXISTING);}
             catch (IOException ex) {consoleError("Unable to create backup! Cancelling namefile deletion. Please update manually or delete the file."); return;}
 

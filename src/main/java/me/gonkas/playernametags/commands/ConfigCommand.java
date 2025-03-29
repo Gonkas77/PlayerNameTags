@@ -194,6 +194,9 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
                     }
 
                     case INTEGER -> {
+
+                        if (Integer.parseInt(args[2]) <= 0) {sender.sendMessage("§cText lengths must be at least 1!"); return true;}
+
                         switch (args[1]) {
                             case MAXNAMELENGTH -> ConfigHandler.setMaxNameLength(Integer.parseInt(args[2]));
                             case MAXPREFIXLENGTH -> ConfigHandler.setMaxPrefixLength(Integer.parseInt(args[2]));
