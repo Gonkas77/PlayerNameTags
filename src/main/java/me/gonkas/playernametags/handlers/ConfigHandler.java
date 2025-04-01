@@ -1,33 +1,117 @@
 package me.gonkas.playernametags.handlers;
 
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static me.gonkas.playernametags.PlayerNameTags.CONFIG;
 
 public class ConfigHandler {
 
     private static String VALIDCHARS;
-    private static int MAXLENGTH;
+    private static int MAXNAMELENGTH;
+    private static int MAXPREFIXLENGTH;
+    private static int MAXSUFFIXLENGTH;
+    private static boolean ALLOWCOLORS;
+    private static boolean ALLOWFORMATTING;
+    private static ArrayList<OfflinePlayer> GAMEMASTERS;
 
     private static final String VALIDCHARSPATH = "valid-name-characters";
-    private static final String MAXLENGTHPATH = "max-name-length";
+    private static final String MAXNAMELENGTHPATH = "max-name-length";
+    private static final String MAXPREFIXLENGTHPATH = "max-prefix-length";
+    private static final String MAXSUFFIXLENGTHPATH = "max-suffix-length";
+    private static final String ALLOWCOLORSPATH = "enable-colors";
+    private static final String ALLOWFORMATTINGPATH = "enable-formatting";
+    private static final String GAMEMASTERSPATH = "game-masters";
 
-    private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyz1234567890.-_ ";
-    private static final int DEFAULTLENGTH = 24;
+    private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ ";
+    private static final int DEFAULTNAMELENGTH = 16;
+    private static final int DEFAULTPREFIXLENGTH = 8;
+    private static final int DEFAULTSUFFIXLENGTH = 8;
+    private static final boolean DEFAULTALLOWCOLORS = true;
+    private static final boolean DEFAULTALLOWFORMATTING = true;
+    private static final ArrayList<String> DEFAULTGMS = new ArrayList<>();
 
     public static void load() {
         fixConfigPaths(CONFIG);
 
         VALIDCHARS = CONFIG.getString(VALIDCHARSPATH);
-        MAXLENGTH = CONFIG.getInt(MAXLENGTHPATH);
+        MAXNAMELENGTH = CONFIG.getInt(MAXNAMELENGTHPATH);
+        MAXPREFIXLENGTH = CONFIG.getInt(MAXPREFIXLENGTHPATH);
+        MAXSUFFIXLENGTH = CONFIG.getInt(MAXSUFFIXLENGTHPATH);
+        ALLOWCOLORS = CONFIG.getBoolean(ALLOWCOLORSPATH);
+        ALLOWFORMATTING = CONFIG.getBoolean(ALLOWFORMATTINGPATH);
+        GAMEMASTERS = new ArrayList<>(CONFIG.getStringList(GAMEMASTERSPATH).stream().map(e -> Bukkit.getOfflinePlayer(UUID.fromString(e))).toList());
+    }
+    
+    public static void unload() {
+        CONFIG.set(VALIDCHARSPATH, VALIDCHARS);
+        CONFIG.set(MAXNAMELENGTHPATH, MAXNAMELENGTH);
+        CONFIG.set(MAXPREFIXLENGTHPATH, MAXPREFIXLENGTH);
+        CONFIG.set(MAXSUFFIXLENGTHPATH, MAXSUFFIXLENGTH);
+        CONFIG.set(ALLOWCOLORSPATH, ALLOWCOLORS);
+        CONFIG.set(ALLOWFORMATTINGPATH, ALLOWFORMATTING);
+        CONFIG.set(GAMEMASTERSPATH, GAMEMASTERS.stream().map(e -> e.getUniqueId().toString()).toList());
     }
 
     // Fixes any used config paths that are broken or missing.
-    public static void fixConfigPaths(FileConfiguration config) {
-        if (!config.contains(VALIDCHARSPATH) || !(config.get(VALIDCHARSPATH) instanceof String)) {config.set(VALIDCHARSPATH, DEFAULTCHARS);}
-        if (!config.contains(MAXLENGTHPATH) || !(config.get(MAXLENGTHPATH) instanceof Integer)) {config.set(MAXLENGTHPATH, DEFAULTLENGTH);}
+    private static void fixConfigPaths(FileConfiguration config) {
+        if (!pathIsString(config, VALIDCHARSPATH)) config.set(VALIDCHARSPATH, DEFAULTCHARS);
+        if (!pathIsInteger(config, MAXNAMELENGTHPATH)) config.set(MAXNAMELENGTHPATH, DEFAULTNAMELENGTH);
+        if (!pathIsInteger(config, MAXPREFIXLENGTHPATH)) config.set(MAXPREFIXLENGTHPATH, DEFAULTPREFIXLENGTH);
+        if (!pathIsInteger(config, MAXSUFFIXLENGTHPATH)) config.set(MAXSUFFIXLENGTHPATH, DEFAULTSUFFIXLENGTH);
+        if (!pathIsBoolean(config, ALLOWCOLORSPATH)) config.set(ALLOWCOLORSPATH, DEFAULTALLOWCOLORS);
+        if (!pathIsBoolean(config, ALLOWFORMATTINGPATH)) config.set(ALLOWFORMATTINGPATH, DEFAULTALLOWFORMATTING);
+        if (!pathIsStringList(config, GAMEMASTERSPATH)) config.set(GAMEMASTERSPATH, DEFAULTGMS);
     }
 
+    private static boolean pathIsString(FileConfiguration config, String path) {return config.contains(path) && config.get(path) instanceof String;}
+    private static boolean pathIsInteger(FileConfiguration config, String path) {return config.contains(path) && config.get(path) instanceof Integer;}
+    private static boolean pathIsBoolean(FileConfiguration config, String path) {return config.contains(path) && config.get(path) instanceof Boolean;}
+    private static boolean pathIsStringList(FileConfiguration config, String path) {return config.contains(path) && config.get(path) instanceof List<?> && config.get(path).getClass() == String.class;}
+
     public static String getValidChars() {return VALIDCHARS;}
-    public static int getMaxNameLength() {return MAXLENGTH;}
+    public static void setValidChars(String chars) {VALIDCHARS = chars;}
+    public static String resetValidChars() {VALIDCHARS = DEFAULTCHARS; return VALIDCHARS;}
+    public static boolean hasInvalidChars(String chars) {
+        for (char c : chars.toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') return true;}
+        return false;
+    }
+
+    public static int getMaxNameLength() {return MAXNAMELENGTH;}
+    public static void setMaxNameLength(int num) {MAXNAMELENGTH = num;}
+    public static int resetMaxNameLength() {MAXNAMELENGTH = DEFAULTNAMELENGTH; return MAXNAMELENGTH;}
+
+    public static int getMaxPrefixLength() {return MAXPREFIXLENGTH;}
+    public static void setMaxPrefixLength(int num) {MAXPREFIXLENGTH = num;}
+    public static int resetMaxPrefixLength() {MAXPREFIXLENGTH = DEFAULTPREFIXLENGTH; return MAXPREFIXLENGTH;}
+
+    public static int getMaxSuffixLength() {return MAXSUFFIXLENGTH;}
+    public static void setMaxSuffixLength(int num) {MAXSUFFIXLENGTH = num;}
+    public static int resetMaxSuffixLength() {MAXSUFFIXLENGTH = DEFAULTSUFFIXLENGTH; return MAXSUFFIXLENGTH;}
+
+    public static boolean getAllowColors() {return ALLOWCOLORS;}
+    public static void setAllowColors(boolean value) {ALLOWCOLORS = value;}
+    public static boolean resetAllowColors() {ALLOWCOLORS = DEFAULTALLOWCOLORS; return ALLOWCOLORS;}
+
+    public static boolean getAllowFormatting() {return ALLOWFORMATTING;}
+    public static void setAllowFormatting(boolean value) {ALLOWFORMATTING = value;}
+    public static boolean resetAllowFormatting() {ALLOWFORMATTING = DEFAULTALLOWFORMATTING; return ALLOWFORMATTING;}
+
+    public static String getFormattingCharacters() {
+        StringBuilder builder = new StringBuilder();
+        if (getAllowColors()) {builder.append("0123456789abcdef");}
+        if (getAllowFormatting()) {builder.append("klmnor");}
+        return builder.toString();
+    }
+
+    public static ArrayList<OfflinePlayer> getGameMasters() {return GAMEMASTERS;}
+    public static void addGameMaster(Player player) {if (!isGameMaster(player)) GAMEMASTERS.add(player);}
+    public static void removeGameMaster(Player player) {GAMEMASTERS.remove(player);}
+    public static boolean isGameMaster(Player player) {return GAMEMASTERS.contains(player);}
 }
