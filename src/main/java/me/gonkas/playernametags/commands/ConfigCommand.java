@@ -41,6 +41,7 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
     private static final List<String> TEXTLENGTHPRESETS = List.of("DEFAULT", "MINECRAFT_LENGTH", "HALF_MINECRAFT_LENGTH", "UNLIMITED");
     private static final List<String> CHARSPRESETS = List.of(
             "DEFAULT",
+            "ALL_CHARACTERS",
             "MINECRAFT",
             "DEFAULT_NO_SPACES",
             "DEFAULT_LOWERCASE",
@@ -145,17 +146,18 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
 
                     case VALIDNAMECHARACTERS -> {
                         switch (args[2]) {
-                            case "DEFAULT" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ ");
+                            case "DEFAULT" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.,+-/*!?' ");
+                            case "ALL_CHARACTERS" -> ConfigHandler.setValidChars("");
                             case "MINECRAFT" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_");
-                            case "DEFAULT_NO_SPACES" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_");
-                            case "DEFAULT_LOWERCASE" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyz1234567890.-_ ");
-                            case "DEFAULT_UPPERCASE" -> ConfigHandler.setValidChars("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ ");
-                            case "DEFAULT_NO_LETTERS" -> ConfigHandler.setValidChars("1234567890.-_ ");
+                            case "DEFAULT_NO_SPACES" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.,+-/*!?'");
+                            case "DEFAULT_LOWERCASE" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyz1234567890_.,+-/*!?' ");
+                            case "DEFAULT_UPPERCASE" -> ConfigHandler.setValidChars("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.,+-/*!?' ");
+                            case "DEFAULT_NO_LETTERS" -> ConfigHandler.setValidChars("1234567890_.,+-/*!?' ");
                             case "LETTERS_ONLY" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
                             case "LETTERS_ONLY_LOWERCASE" -> ConfigHandler.setValidChars("abcdefghijklmnopqrstuvwxyz");
                             case "LETTERS_ONLY_UPPERCASE" -> ConfigHandler.setValidChars("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
                             case "NUMBERS_ONLY" -> ConfigHandler.setValidChars("1234567890");
-                            case "SPECIAL_CHARACTERS_ONLY" -> ConfigHandler.setValidChars(".-_ ");
+                            case "SPECIAL_CHARACTERS_ONLY" -> ConfigHandler.setValidChars("_.,+-/*!?' ");
                             default -> {sender.sendMessage("§cInvalid preset given! Match the presets displayed during command usage."); return true;}
                         }
                     }
@@ -206,7 +208,11 @@ public class ConfigCommand implements CommandExecutor, TabCompleter {
                     }
 
                     case STRING -> {
-                        if (args[1].equals(VALIDNAMECHARACTERS)) ConfigHandler.setValidChars(args[2]);
+                        if (args[1].equals(VALIDNAMECHARACTERS)) {
+                            StringBuilder chars = new StringBuilder(args[2]);
+                            for (int i=3; i < args.length; i++) {chars.append(args[i]);}
+                            ConfigHandler.setValidChars(chars.toString());
+                        }
                         else {sender.sendMessage("§cInvalid value given! Match the options or value type displayed during command usage.");}
                     }
                 } sender.sendMessage("Set '" + args[1] + "' to '" + args[2] + "'.");

@@ -16,7 +16,7 @@ import java.util.List;
 
 public class NameTagCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = List.of("get", "reset", "set", "toggle");
+    private static final List<String> SUBCOMMANDS = List.of("copy", "get", "reset", "set", "toggle");
     private static final List<String> COMPONENTS = List.of("name", "prefix", "suffix");
 
     @Override
@@ -25,15 +25,32 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
         if (!PlayerNameTags.PLUGINISLOADED) {sender.sendMessage("§cPlugin PlayerNameTags is disabled! Enable using '/pntconfig reset enable-plugin', '/pntconfig set enable-plugin true', or '/pntconfig preset enable-plugin ENABLED'.");return true;}
 
         // Making sure a sub-command and a component from the sub-command were chosen.
-        if (args.length == 0 || !SUBCOMMANDS.contains(args[0])) {sender.sendMessage("§cInvalid command usage! Use '/nametag <get|reset|set|toggle> <name|prefix|suffix>'."); return true;}
+        if (args.length == 0 || !SUBCOMMANDS.contains(args[0])) {sender.sendMessage("§cInvalid command usage! Use '/nametag <copy|get|reset|set|toggle> <name|prefix|suffix>'."); return true;}
         if (!args[0].equals("toggle") && (args.length == 1 || !COMPONENTS.contains(args[1]))) {
             if (args[0].equals("set")) {sender.sendMessage("§cInvalid sub-command usage! Use '/nametag set <name|prefix|suffix> <player> <text>'.");}
+            else if (args[0].equals("copy")) {sender.sendMessage("§cInvalid sub-command usage! Use '/nametag copy <name|prefix|suffix> <source_player> <target_player>'.");}
             else {sender.sendMessage("§cInvalid sub-command usage! Use '/nametag " + args[0] + " <name|prefix|suffix> [player]'.");}
             return true;
         }
 
         int arg_count = 2;
         if (args[0].equals("toggle")) {arg_count = 1;}
+
+        TextType text_type = null;
+        if (!args[0].equals("toggle")) {text_type = TextType.valueOf(args[1].toUpperCase());}
+
+        // Essentially does 'get' and 'set' for <source_player> and <target_player> respectively with source_player's get result being target_player's set statement.
+        if (args[0].equals("copy")) {
+
+            String text = getText(sender, args[2], text_type);
+
+            if (text.isEmpty()) return true;
+            if (args.length < 4) {sender.sendMessage("§cThis sub-command requires at least 3 arguments! Use '/nametag copy " + args[1] + " <source_player> <target_player>'."); return true;}
+
+            args[0] = "set";
+            args[2] = args[3];
+            args[3] = text;
+        }
 
         // Getting the player target
         Player target;
@@ -43,23 +60,14 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
             target = (Player) sender;
         } else {target = Bukkit.getPlayerExact(args[arg_count]);}
 
-        TextType text_type = null;
-        if (!args[0].equals("toggle")) {text_type = TextType.valueOf(args[1].toUpperCase());}
 
         // Executing the sub-command
         switch (args[0]) {
             case "get" -> {
+                String text = getText(sender, target, args[2], text_type);
+                if (text.isEmpty()) return true;
 
-                OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(args[2]);
-                if (target == null && player == null) {sender.sendMessage("§cPlayer is offline and not cached!"); return true;}
-
-                String toGet = switch (text_type) {
-                    case NAME -> {if (target != null) yield NameTagHandler.getName(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.NAME);}
-                    case PREFIX -> {if (target != null) yield NameTagHandler.getPrefix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.PREFIX);}
-                    case SUFFIX -> {if (target != null) yield NameTagHandler.getSuffix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.SUFFIX);}
-                };
-
-                sender.sendMessage("§aPlayer " + (target != null ? target.getName() : args[2]) + "'s " + args[1] + " is " + toGet + ".");
+                sender.sendMessage("§aPlayer " + (target != null ? target.getName() : args[2]) + "'s " + args[1] + " is " + text + "§a.");
             }
             case "reset" -> {
 
@@ -124,8 +132,34 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
             case 1 -> SUBCOMMANDS.stream().filter(n -> Strings.containsIgnoreCase(n, args[0])).toList();
             case 2 -> {if (args[0].equals("toggle")) yield Strings.matchOnlinePlayersName(args[1]); else yield COMPONENTS.stream().filter(n -> Strings.containsIgnoreCase(n, args[1])).toList();}
             case 3 -> Strings.matchOnlinePlayersName(args[2]);
-            case 4 -> {if (args[0].equals("set")) yield List.of("<text>"); else yield List.of();}
+            case 4 -> {if (args[0].equals("copy")) yield Strings.matchOnlinePlayersName(args[3]); else if (args[0].equals("set")) yield List.of("<text>"); else yield List.of();}
             default -> List.of();
+        };
+    }
+
+    private static String getText(CommandSender sender, String player_name, TextType text_type) {
+
+        Player target = Bukkit.getPlayerExact(player_name);
+        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(player_name);
+
+        if (target == null && player == null) {sender.sendMessage("§cPlayer is offline and not cached!"); return "";}
+
+        return switch (text_type) {
+            case NAME -> {if (target != null) yield NameTagHandler.getName(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.NAME);}
+            case PREFIX -> {if (target != null) yield NameTagHandler.getPrefix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.PREFIX);}
+            case SUFFIX -> {if (target != null) yield NameTagHandler.getSuffix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.SUFFIX);}
+        };
+    }
+
+    private static String getText(CommandSender sender, Player target, String player_name, TextType text_type) {
+
+        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(player_name);
+        if (target == null && player == null) {sender.sendMessage("§cPlayer is offline and not cached!"); return "";}
+
+        return switch (text_type) {
+            case NAME -> {if (target != null) yield NameTagHandler.getName(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.NAME);}
+            case PREFIX -> {if (target != null) yield NameTagHandler.getPrefix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.PREFIX);}
+            case SUFFIX -> {if (target != null) yield NameTagHandler.getSuffix(target.getPlayer()); else yield NameTagHandler.getFromFile(player, TextType.SUFFIX);}
         };
     }
 }

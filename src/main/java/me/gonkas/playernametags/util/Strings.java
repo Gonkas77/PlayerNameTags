@@ -1,5 +1,6 @@
 package me.gonkas.playernametags.util;
 
+import me.gonkas.playernametags.PlayerNameTags;
 import me.gonkas.playernametags.handlers.ConfigHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,7 +31,7 @@ public class Strings {
         int text_length = text.length();
 
         for (int i=0; i < text.length(); i++) {
-            if (text.charAt(i) != '&' || i == text.length() - 1 || !containsChar(format_chars, text.charAt(i+1))) continue;
+            if ((text.charAt(i) != '&' && text.charAt(i) != '§') || i == text.length() - 1 || !containsChar(format_chars, text.charAt(i+1))) continue;
 
             if (i == 0) text = new StringBuilder(text).replace(0, 1, "§").toString();
             else if (text.charAt(i - 1) != '\\') {text = new StringBuilder(text).replace(i, i + 1, "§").toString();}

@@ -1,13 +1,7 @@
 package me.gonkas.playernametags.handlers;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static me.gonkas.playernametags.PlayerNameTags.CONFIG;
 
@@ -27,7 +21,7 @@ public class ConfigHandler {
     private static final String ALLOWCOLORSPATH = "enable-colors";
     private static final String ALLOWFORMATTINGPATH = "enable-formatting";
 
-    private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ ";
+    private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.,+-/*!?' ";
     private static final int DEFAULTNAMELENGTH = 16;
     private static final int DEFAULTPREFIXLENGTH = 8;
     private static final int DEFAULTSUFFIXLENGTH = 8;
@@ -73,6 +67,7 @@ public class ConfigHandler {
     public static void setValidChars(String chars) {VALIDCHARS = chars;}
     public static String resetValidChars() {VALIDCHARS = DEFAULTCHARS; return VALIDCHARS;}
     public static boolean hasInvalidChars(String chars) {
+        if (VALIDCHARS.isEmpty()) return false;
         for (char c : chars.toCharArray()) {if (!ConfigHandler.getValidChars().contains(String.valueOf(c)) && c != '§') return true;}
         return false;
     }

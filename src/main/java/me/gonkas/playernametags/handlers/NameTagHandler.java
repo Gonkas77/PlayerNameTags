@@ -323,9 +323,9 @@ public class NameTagHandler implements Listener {
     public static void createNameTagConfig(String offline_player_name, Map<TextType, String> nametag, boolean hidden) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(offline_player_name);
         YamlConfiguration config = YamlConfiguration.loadConfiguration(getNameFile(player));
-        config.set("prefix", nametag.get(TextType.PREFIX));
-        config.set("name", nametag.get(TextType.NAME));
-        config.set("suffix", nametag.get(TextType.NAME));
+        config.set("prefix", nametag.get(TextType.PREFIX) != null ? nametag.get(TextType.PREFIX) : "");
+        config.set("name", nametag.get(TextType.NAME) != null ? nametag.get(TextType.NAME) : player.getName() + "§r");
+        config.set("suffix", nametag.get(TextType.SUFFIX) != null ? nametag.get(TextType.SUFFIX) : "");
         config.set("hidden", hidden);
         saveNameTagConfig(player, config);
     }
