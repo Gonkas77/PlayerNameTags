@@ -19,7 +19,6 @@ public class ConfigHandler {
     private static int MAXSUFFIXLENGTH;
     private static boolean ALLOWCOLORS;
     private static boolean ALLOWFORMATTING;
-    private static ArrayList<OfflinePlayer> GAMEMASTERS;
 
     private static final String VALIDCHARSPATH = "valid-name-characters";
     private static final String MAXNAMELENGTHPATH = "max-name-length";
@@ -27,7 +26,6 @@ public class ConfigHandler {
     private static final String MAXSUFFIXLENGTHPATH = "max-suffix-length";
     private static final String ALLOWCOLORSPATH = "enable-colors";
     private static final String ALLOWFORMATTINGPATH = "enable-formatting";
-    private static final String GAMEMASTERSPATH = "game-masters";
 
     private static final String DEFAULTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.-_ ";
     private static final int DEFAULTNAMELENGTH = 16;
@@ -35,7 +33,6 @@ public class ConfigHandler {
     private static final int DEFAULTSUFFIXLENGTH = 8;
     private static final boolean DEFAULTALLOWCOLORS = true;
     private static final boolean DEFAULTALLOWFORMATTING = true;
-    private static final ArrayList<String> DEFAULTGMS = new ArrayList<>();
 
     public static void load() {
         fixConfigPaths(CONFIG);
@@ -46,7 +43,6 @@ public class ConfigHandler {
         MAXSUFFIXLENGTH = CONFIG.getInt(MAXSUFFIXLENGTHPATH);
         ALLOWCOLORS = CONFIG.getBoolean(ALLOWCOLORSPATH);
         ALLOWFORMATTING = CONFIG.getBoolean(ALLOWFORMATTINGPATH);
-        GAMEMASTERS = new ArrayList<>(CONFIG.getStringList(GAMEMASTERSPATH).stream().map(e -> Bukkit.getOfflinePlayer(UUID.fromString(e))).toList());
     }
     
     public static void unload() {
@@ -56,7 +52,6 @@ public class ConfigHandler {
         CONFIG.set(MAXSUFFIXLENGTHPATH, MAXSUFFIXLENGTH);
         CONFIG.set(ALLOWCOLORSPATH, ALLOWCOLORS);
         CONFIG.set(ALLOWFORMATTINGPATH, ALLOWFORMATTING);
-        CONFIG.set(GAMEMASTERSPATH, GAMEMASTERS.stream().map(e -> e.getUniqueId().toString()).toList());
     }
 
     // Fixes any used config paths that are broken or missing.
@@ -67,7 +62,6 @@ public class ConfigHandler {
         if (!pathIsInteger(config, MAXSUFFIXLENGTHPATH)) config.set(MAXSUFFIXLENGTHPATH, DEFAULTSUFFIXLENGTH);
         if (!pathIsBoolean(config, ALLOWCOLORSPATH)) config.set(ALLOWCOLORSPATH, DEFAULTALLOWCOLORS);
         if (!pathIsBoolean(config, ALLOWFORMATTINGPATH)) config.set(ALLOWFORMATTINGPATH, DEFAULTALLOWFORMATTING);
-        if (!pathIsStringList(config, GAMEMASTERSPATH)) config.set(GAMEMASTERSPATH, DEFAULTGMS);
     }
 
     private static boolean pathIsString(FileConfiguration config, String path) {return config.contains(path) && config.get(path) instanceof String;}
@@ -109,9 +103,4 @@ public class ConfigHandler {
         if (getAllowFormatting()) {builder.append("klmnor");}
         return builder.toString();
     }
-
-    public static ArrayList<OfflinePlayer> getGameMasters() {return GAMEMASTERS;}
-    public static void addGameMaster(Player player) {if (!isGameMaster(player)) GAMEMASTERS.add(player);}
-    public static void removeGameMaster(Player player) {GAMEMASTERS.remove(player);}
-    public static boolean isGameMaster(Player player) {return GAMEMASTERS.contains(player);}
 }

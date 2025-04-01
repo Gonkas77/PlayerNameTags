@@ -3,6 +3,7 @@ package me.gonkas.playernametags.handlers;
 import me.gonkas.playernametags.util.Strings;
 import me.gonkas.playernametags.util.TextType;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -169,7 +170,13 @@ public class NameTagHandler implements Listener {
         Player player = event.getPlayer();
 
         loadPlayer(player);
-        if (event.joinMessage() != null) {event.joinMessage(Component.text("§c" + getFullName(player) + "§c entered the death game."));}
+        if (event.joinMessage() != null) {
+            event.joinMessage(event.joinMessage().replaceText(
+                    TextReplacementConfig.builder()
+                            .match(player.getName())
+                            .replacement(getFullName(player))
+                            .build()));
+        }
     }
 
     @EventHandler
@@ -177,7 +184,13 @@ public class NameTagHandler implements Listener {
         if (!PLUGINISLOADED) return;
         Player player = event.getPlayer();
 
-        if (event.quitMessage() != null) {event.quitMessage(Component.text("§c" + getFullName(player) + "§c left the death game."));}
+        if (event.quitMessage() != null) {
+            event.quitMessage(event.quitMessage().replaceText(
+                    TextReplacementConfig.builder()
+                            .match(player.getName())
+                            .replacement(getFullName(player))
+                            .build()));
+        }
         unloadPlayer(player);
     }
 
@@ -215,12 +228,15 @@ public class NameTagHandler implements Listener {
     @EventHandler
     public static void onPlayerDeath(PlayerDeathEvent event) {
         if (!PLUGINISLOADED) return;
-
         Player player = event.getPlayer();
 
-        if (event.deathMessage() != null) {event.deathMessage(Component.text("§4" + getName(player) + "§4 died in the death game."));}
-        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p, Sound.ENTITY_BLAZE_DEATH, SoundCategory.MASTER, 100f, 0.5f));
-        player.setGameMode(GameMode.SPECTATOR);
+        if (event.deathMessage() != null) {
+            event.deathMessage(event.deathMessage().replaceText(
+                    TextReplacementConfig.builder()
+                            .match(player.getName())
+                            .replacement(getFullName(player))
+                            .build()));
+        }
     }
 
     @EventHandler

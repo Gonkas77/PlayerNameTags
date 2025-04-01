@@ -2,7 +2,6 @@ package me.gonkas.playernametags;
 
 import me.gonkas.playernametags.commands.*;
 import me.gonkas.playernametags.handlers.ConfigHandler;
-import me.gonkas.playernametags.handlers.CustomHandler;
 import me.gonkas.playernametags.handlers.NameTagHandler;
 import me.gonkas.playernametags.util.Strings;
 import me.gonkas.playernametags.util.TextType;
@@ -60,9 +59,6 @@ public final class PlayerNameTags extends JavaPlugin {
 
         getCommand("pntconfig").setExecutor(new ConfigCommand());
         getCommand("nametag").setExecutor(new NameTagCommand());
-        getCommand("lockchat").setExecutor(new LockChatCommand());
-        getCommand("unlockchat").setExecutor(new UnlockChatCommand());
-        getCommand("gamemaster").setExecutor(new GameMasterCommand());
 
         if (!CONFIG.getBoolean("enable-plugin")) {consoleError("Plugin is disabled! Use '/pntconfig set enable-plugin true' to enable the plugin!"); return;}
         load();
@@ -88,7 +84,6 @@ public final class PlayerNameTags extends JavaPlugin {
         NameTagHandler.load();
 
         Bukkit.getPluginManager().registerEvents(new NameTagHandler(), INSTANCE);
-        Bukkit.getPluginManager().registerEvents(new CustomHandler(), INSTANCE);
 
         consoleInfo("Loaded successfully.");
         PLUGINISLOADED = true;
@@ -131,8 +126,6 @@ public final class PlayerNameTags extends JavaPlugin {
 
         consoleWarn("Old namefile detected! Updating to new nametag file system...");
         YamlConfiguration nametags = YamlConfiguration.loadConfiguration(old_namefile);
-
-        Bukkit.getServer().
 
         nametags.getValues(false).forEach((path, value) -> {
             try {UUID.fromString(path);} catch (IllegalArgumentException e) {return;}
