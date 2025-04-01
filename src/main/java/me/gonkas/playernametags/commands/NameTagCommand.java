@@ -64,7 +64,7 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
         // Executing the sub-command
         switch (args[0]) {
             case "get" -> {
-                String text = getText(sender, target, args[2], text_type);
+                String text = getText(sender, target, args.length >= 3 ? args[2] : "", text_type);
                 if (text.isEmpty()) return true;
 
                 sender.sendMessage("§aPlayer " + (target != null ? target.getName() : args[2]) + "'s " + args[1] + " is " + text + "§a.");
@@ -152,8 +152,8 @@ public class NameTagCommand implements CommandExecutor, TabCompleter {
     }
 
     private static String getText(CommandSender sender, Player target, String player_name, TextType text_type) {
-
-        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(player_name);
+        
+        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(player_name.isEmpty() ? target.getName() : player_name);
         if (target == null && player == null) {sender.sendMessage("§cPlayer is offline and not cached!"); return "";}
 
         return switch (text_type) {
