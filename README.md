@@ -1,5 +1,7 @@
 This plugin allows a server admin to set any online or offline player's nameplate to whatever they like! It works as if you right clicked a player with a nametag! Unfortunately the plugin does not allow players to be on vanilla teams (`/team`) since in order to hide the actual player nameplate all players must be in a team with the `nametagVisibility` option set to `never`. _You can work around this by setting the new team's `nametagVisibility` to `never` as well._
 
+You can color or format names using the `&` character instead of the usual `§` when using the `/nametag set` command. See more at [Formatting Codes](https://minecraft.wiki/w/Formatting_codes).
+
 All of the commands' syntaxes and the config's parameters are at the bottom.
 
 ---
