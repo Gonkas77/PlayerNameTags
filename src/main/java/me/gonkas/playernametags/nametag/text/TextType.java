@@ -1,4 +1,4 @@
-package me.gonkas.playernametags.util;
+package me.gonkas.playernametags.nametag.text;
 
 public enum TextType {
     PREFIX,

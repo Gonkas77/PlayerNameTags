@@ -1,4 +1,4 @@
-package me.gonkas.playernametags.util;
+package me.gonkas.playernametags.config;
 
 public enum ConfigVarType {
     BOOLEAN,

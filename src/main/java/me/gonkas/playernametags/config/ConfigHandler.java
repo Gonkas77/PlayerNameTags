@@ -1,4 +1,4 @@
-package me.gonkas.playernametags.handlers;
+package me.gonkas.playernametags.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import java.util.List;

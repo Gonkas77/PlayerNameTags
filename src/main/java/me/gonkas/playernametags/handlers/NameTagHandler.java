@@ -1,7 +1,8 @@
 package me.gonkas.playernametags.handlers;
 
+import me.gonkas.playernametags.config.ConfigHandler;
 import me.gonkas.playernametags.util.Strings;
-import me.gonkas.playernametags.util.TextType;
+import me.gonkas.playernametags.nametag.text.TextType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import org.bukkit.*;
