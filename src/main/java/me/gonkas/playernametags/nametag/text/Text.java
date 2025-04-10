@@ -21,6 +21,12 @@ public class Text {
         this.format = format;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder string = new StringBuilder(text);
+        if (color == Color.AQUA) {}
+    }
+
     private static class Builder {
 
         String text = "";

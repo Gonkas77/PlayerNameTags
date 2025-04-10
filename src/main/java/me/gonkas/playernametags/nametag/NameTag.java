@@ -8,6 +8,5 @@ import java.util.ArrayList;
 public class NameTag {
 
     ArrayList<Text> prefix;
-    ArrayList<Text>
     Player owner;
 }

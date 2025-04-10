@@ -1,20 +1,150 @@
 # If set to false, plugin will still be toggleable using '/pntconfig set enable-plugin true'.
 enable-plugin: true
 
-# All possible characters to be used in names
-valid-name-characters: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.,+-/*!?' "
+# Config version
+version: 1
 
-# Maximum length for names
-max-name-length: 16
 
-# Maximum length for prefixes
-max-prefix-length: 8
+# Nameplate system that replaces Minecraft's with a more customizable one.
+nametag:
 
-# Maximum length for suffixes
-max-suffix-length: 8
+  enabled: true # If set to false will use the Minecraft nameplates
 
-# Whether colors are enabled or not
-enable-colors: true
+  # If true, the custom name will be visible in "tab".
+  display-in-player-list: true
 
-# Whether bold, italic, strikethrough, underlined, and obfuscated texts are enabled or not
-enable-formatting: true
+  # If true,
+  display-in-chat: true
+
+  name:
+
+    colors:
+      enabled: true
+
+      allow-multiple: true
+      allow-non-minecraft-colors: false
+      max-colors: 2 # int
+
+      banned-colors: [] # Strings of hex values. Example: "55FFFF"
+      banned-color-combos: [] # Strings of hex values joined by '-'. Example: "000000-FFFFFF"
+
+    decorations:
+      enabled: true
+
+      allow-multiple: true
+      max-decorations: 1 # int
+
+      banned-decorations: [] # Strings of the names. Example: "underlined"
+      banned-decoration-combos: [] # Strings of the names joined by '-'. Example: "bold-italic"
+
+    text:
+      permitted-chars: [] # String containing characters allowed. Example: "abcdef"
+      max-length: 16 # int
+
+
+  prefix:
+    enabled: true
+
+    colors:
+      enabled: true
+
+      allow-multiple: true
+      allow-non-minecraft-colors: false
+      max-colors: 2 # int
+
+      banned-colors: [ ] # Strings of hex values. Example: "55FFFF"
+      banned-color-combos: [ ] # Strings of hex values joined by '-'. Example: "000000-FFFFFF"
+
+    decorations:
+      enabled: true
+
+      allow-multiple: true
+      max-decorations: 1 # int
+
+      banned-decorations: [ ] # Strings of the prefixes. Example: "underlined"
+      banned-decoration-combos: [ ] # Strings of the prefixes joined by '-'. Example: "bold-italic"
+
+    text:
+      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      max-length: 8 # int
+
+
+  suffix:
+    enabled: false
+
+    colors:
+      enabled: true
+
+      allow-multiple: true
+      allow-non-minecraft-colors: false
+      max-colors: 2 # int
+
+      banned-colors: [ ] # Strings of hex values. Example: "55FFFF"
+      banned-color-combos: [ ] # Strings of hex values joined by '-'. Example: "000000-FFFFFF"
+
+    decorations:
+      enabled: true
+
+      allow-multiple: true
+      max-decorations: 1 # int
+
+      banned-decorations: [ ] # Strings of the suffixes. Example: "underlined"
+      banned-decoration-combos: [ ] # Strings of the suffixes joined by '-'. Example: "bold-italic"
+
+    text:
+      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      max-length: 8 # int
+
+
+  title:
+    enabled: true
+
+    colors:
+      enabled: true
+
+      allow-multiple: true
+      allow-non-minecraft-colors: false
+      max-colors: 2 # int
+
+      banned-colors: [ ] # Strings of hex values. Example: "55FFFF"
+      banned-color-combos: [ ] # Strings of hex values joined by '-'. Example: "000000-FFFFFF"
+
+    decorations:
+      enabled: true
+
+      allow-multiple: true
+      max-decorations: 3 # int
+
+      banned-decorations: [ ] # Strings of the titles. Example: "underlined"
+      banned-decoration-combos: [ ] # Strings of the titles joined by '-'. Example: "bold-italic"
+
+    text:
+      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      max-length: 24 # int
+
+
+  subtitle:
+    enabled: false
+
+    colors:
+      enabled: true
+
+      allow-multiple: true
+      allow-non-minecraft-colors: false
+      max-colors: 2 # int
+
+      banned-colors: [ ] # Strings of hex values. Example: "55FFFF"
+      banned-color-combos: [ ] # Strings of hex values joined by '-'. Example: "000000-FFFFFF"
+
+    decorations:
+      enabled: true
+
+      allow-multiple: true
+      max-decorations: 2 # int
+
+      banned-decorations: [ ] # Strings of the subtitles. Example: "underlined"
+      banned-decoration-combos: [ ] # Strings of the subtitles joined by '-'. Example: "bold-italic"
+
+    text:
+      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      max-length: 24 # int
