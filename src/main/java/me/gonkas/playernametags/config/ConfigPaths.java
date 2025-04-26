@@ -146,4 +146,13 @@ public class ConfigPaths {
         if (PATHS.isEmpty()) {PATHS.addAll(Arrays.stream(ConfigPaths.class.getDeclaredFields()).map(f -> f.getName().replaceAll("_", "-").toLowerCase()).toList());}
         return PATHS;
     }
+
+    public static ConfigVarType getVarType(String path) throws IllegalArgumentException {
+        if (!getAllPaths().contains(path)) throw new IllegalArgumentException("Path given is not a valid Config path.");
+
+        if (path.contains(PERMITTEDCHARS)) return ConfigVarType.STRING;
+        if (path.contains(VERSION) || path.contains(MAXCOLORS) || path.contains(MAXDECORATIONS) || path.contains(MAXLENGTH)) return ConfigVarType.INTEGER;
+        if (path.contains(ENABLE_PLUGIN) || path.contains(ENABLED) || path.contains(NAMETAG_DISPLAY_IN_PLAYER_LIST) || path.contains(NAMETAG_DISPLAY_IN_CHAT) || path.contains(ALLOWNONMINECRAFTCOLORS)) return ConfigVarType.BOOLEAN;
+        return ConfigVarType.STRINGLIST;
+    }
 }

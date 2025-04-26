@@ -38,7 +38,7 @@ nametag:
       banned-decoration-combos: [] # Strings of the names joined by '-'. Example: "bold-italic"
 
     text:
-      permitted-chars: [] # String containing characters allowed. Example: "abcdef"
+      permitted-chars: "" # String containing characters allowed. Example: "abcdef"
       max-length: 16 # int
 
 
@@ -65,7 +65,7 @@ nametag:
       banned-decoration-combos: [ ] # Strings of the prefixes joined by '-'. Example: "bold-italic"
 
     text:
-      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      permitted-chars: "" # String containing characters allowed. Example: "abcdef"
       max-length: 8 # int
 
 
@@ -92,7 +92,7 @@ nametag:
       banned-decoration-combos: [ ] # Strings of the suffixes joined by '-'. Example: "bold-italic"
 
     text:
-      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      permitted-chars: "" # String containing characters allowed. Example: "abcdef"
       max-length: 8 # int
 
 
@@ -119,7 +119,7 @@ nametag:
       banned-decoration-combos: [ ] # Strings of the titles joined by '-'. Example: "bold-italic"
 
     text:
-      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      permitted-chars: "" # String containing characters allowed. Example: "abcdef"
       max-length: 24 # int
 
 
@@ -146,5 +146,5 @@ nametag:
       banned-decoration-combos: [ ] # Strings of the subtitles joined by '-'. Example: "bold-italic"
 
     text:
-      permitted-chars: [ ] # String containing characters allowed. Example: "abcdef"
+      permitted-chars: "" # String containing characters allowed. Example: "abcdef"
       max-length: 24 # int

@@ -1,5 +1,7 @@
 package me.gonkas.playernametags.nametag.text;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.Style;
 import org.bukkit.Color;
 
 public class Text {
@@ -21,15 +23,13 @@ public class Text {
         this.format = format;
     }
 
-    @Override
     public String toString() {
         StringBuilder string = new StringBuilder(text);
-        if (color == Color.AQUA) {}
     }
 
     private static class Builder {
 
-        String text = "";
+        String text;
         Color color;
         TextFormat format;
 
