@@ -1,8 +1,6 @@
 package me.gonkas.playernametags.nametag.text;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.Style;
-import org.bukkit.Color;
+import me.gonkas.playernametags.nametag.color.Color;
 
 public class Text {
 
@@ -11,27 +9,30 @@ public class Text {
 
     String text;
     Color color;
-    TextFormat format;
+    TextStyle style;
 
     String getText() {return text;}
     Color getColor() {return color;}
-    TextFormat getFormat() {return format;}
+    TextStyle getStyle() {return style;}
 
-    Text(String text, Color color, TextFormat format) {
+    Text(String text, Color color, TextStyle style) {
         this.text = text;
         this.color = color;
-        this.format = format;
+        this.style = style;
     }
 
     public String toString() {
         StringBuilder string = new StringBuilder(text);
+        string.insert(0, Color.getColorCode(this.color));
+        string.insert(1, TextStyle.getStyleCode(this.style));
+        return string.toString();
     }
 
     private static class Builder {
 
         String text;
         Color color;
-        TextFormat format;
+        TextStyle style;
 
         Builder(String text) {
             this.text = text;
@@ -39,7 +40,7 @@ public class Text {
         Builder(Text text) {
             this.text = text.getText();
             this.color = text.getColor();
-            this.format = text.getFormat();
+            this.style = text.getStyle();
         }
 
         public Builder setText(String text) {
@@ -63,13 +64,13 @@ public class Text {
             this.color = color;
             return this;
         }
-        public Builder setFormat(TextFormat format) {
-            this.format = format;
+        public Builder setStyle(TextStyle style) {
+            this.style = style;
             return this;
         }
 
         public Text build() {
-            return new Text(text, color, format);
+            return new Text(text, color, style);
         }
     }
 }
